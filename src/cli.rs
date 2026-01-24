@@ -1,11 +1,15 @@
 use std::borrow::Cow;
 use std::io::{self, Write};
 use std::process::ExitCode;
+
+#[cfg(feature = "interactive")]
 use std::sync::Arc;
 
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use clap_complete::{Generator, Shell as CompletionShell};
 use serde_json;
+
+#[cfg(feature = "interactive")]
 use skim::prelude::*;
 
 use crate::alias::{Alias, collect_aliases};
@@ -106,6 +110,7 @@ enum GenerateKind {
     Man,
 }
 
+#[cfg(feature = "interactive")]
 struct AliasItem {
     alias: Alias,
     display: String,
@@ -115,6 +120,7 @@ struct AliasItem {
     source_location: Option<AliasLocation>,
 }
 
+#[cfg(feature = "interactive")]
 impl AliasItem {
     fn new(
         alias: Alias,
@@ -128,6 +134,7 @@ impl AliasItem {
     }
 }
 
+#[cfg(feature = "interactive")]
 impl SkimItem for AliasItem {
     fn text(&self) -> Cow<'_, str> {
         Cow::Borrowed(&self.display)
@@ -178,6 +185,7 @@ fn sort_by_frecency(aliases: &[Alias], stats: &UsageStats) -> Vec<Alias> {
     sorted
 }
 
+#[cfg(feature = "interactive")]
 fn run_fuzzy_finder(
     aliases: &[Alias],
     config: &Config,
@@ -256,6 +264,36 @@ fn run_fuzzy_finder(
             }
         })
         .ok_or(AlxError::UserAborted)
+}
+
+#[cfg(not(feature = "interactive"))]
+fn run_fuzzy_finder(
+    aliases: &[Alias],
+    _config: &Config,
+    _query: Option<&str>,
+    _print_query: bool,
+    _stats: &UsageStats,
+    _shell: Shell,
+) -> Result<(String, String)> {
+    // Interactive mode is not supported on non-Unix platforms
+    // Fallback to listing mode
+    if aliases.is_empty() {
+        return Err(AlxError::NoAliasesFound);
+    }
+
+    // Print available aliases and ask for a selection
+    writeln!(
+        io::stderr(),
+        "Interactive mode not supported on this platform."
+    )?;
+    writeln!(io::stderr(), "Available aliases:")?;
+    for alias in aliases {
+        writeln!(io::stderr(), "  {}", alias.name)?;
+    }
+    writeln!(io::stderr())?;
+    writeln!(io::stderr(), "Please use 'alx --list' to see all aliases")?;
+
+    Err(AlxError::NoAliasesFound)
 }
 
 fn output_aliases(
