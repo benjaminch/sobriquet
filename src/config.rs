@@ -85,20 +85,42 @@ pub enum ColorChoice {
 
 impl Config {
     pub fn load() -> Self {
-        Self::config_path()
-            .and_then(|path| {
-                if path.exists() {
-                    fs::read_to_string(&path).ok()
-                } else {
-                    None
-                }
-            })
+        Self::find_config()
+            .and_then(|path| fs::read_to_string(&path).ok())
             .and_then(|content| toml::from_str(&content).ok())
             .unwrap_or_default()
     }
 
+    /// Find the config file by checking multiple locations in priority order
+    fn find_config() -> Option<PathBuf> {
+        let locations = Self::config_paths();
+        locations.into_iter().find(|path| path.exists())
+    }
+
+    /// Return all possible config file locations in priority order
+    pub fn config_paths() -> Vec<PathBuf> {
+        let mut paths = Vec::new();
+
+        // 1. ~/.config/alx/config.toml (primary, XDG standard)
+        if let Some(config_dir) = dirs::config_dir() {
+            paths.push(config_dir.join("alx").join("config.toml"));
+        }
+
+        // 2. ~/.config/alx.toml (alternative in config dir)
+        if let Some(config_dir) = dirs::config_dir() {
+            paths.push(config_dir.join("alx.toml"));
+        }
+
+        // 3. ~/.alx.toml (home directory dotfile)
+        if let Some(home_dir) = dirs::home_dir() {
+            paths.push(home_dir.join(".alx.toml"));
+        }
+
+        paths
+    }
+
     pub fn config_path() -> Option<PathBuf> {
-        dirs::config_dir().map(|p| p.join("alx").join("config.toml"))
+        Self::find_config().or_else(|| Self::config_paths().into_iter().next())
     }
 
     pub fn use_colors(&self) -> bool {
