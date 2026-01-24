@@ -210,7 +210,7 @@ impl<'a> CommandAnalysis<'a> {
             if has_secret_warning {
                 let secret_types = get_secret_types(self.command);
                 let types_str = if secret_types.is_empty() {
-                    "secret/token".to_string()
+                    "secret/token".to_owned()
                 } else {
                     secret_types.join(", ")
                 };

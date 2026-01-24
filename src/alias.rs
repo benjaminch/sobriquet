@@ -147,28 +147,27 @@ pub fn collect_aliases(
         let shell_name = shell.as_str();
 
         // Try cache first
-        if config.shell.cache_ttl > 0 {
-            if let Some(cache) = AliasCache::load() {
-                if cache.is_valid(config.shell.cache_ttl, shell_name) {
-                    return Ok(cache.aliases);
-                }
-            }
+        if config.shell.cache_ttl > 0
+            && let Some(cache) = AliasCache::load()
+            && cache.is_valid(config.shell.cache_ttl, shell_name)
+        {
+            return Ok(cache.aliases);
         }
 
         // Fetch from shell
-        if let Ok(aliases) = try_collect_from_shell(shell) {
-            if !aliases.is_empty() {
-                // Save to cache
-                if config.shell.cache_ttl > 0 {
-                    let cache = AliasCache {
-                        aliases: aliases.clone(),
-                        timestamp: AliasCache::now(),
-                        shell: shell_name.to_owned(),
-                    };
-                    cache.save();
-                }
-                return Ok(aliases);
+        if let Ok(aliases) = try_collect_from_shell(shell)
+            && !aliases.is_empty()
+        {
+            // Save to cache
+            if config.shell.cache_ttl > 0 {
+                let cache = AliasCache {
+                    aliases: aliases.clone(),
+                    timestamp: AliasCache::now(),
+                    shell: shell_name.to_owned(),
+                };
+                cache.save();
             }
+            return Ok(aliases);
         }
     }
 
