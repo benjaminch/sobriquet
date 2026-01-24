@@ -9,7 +9,7 @@ fn generates_zsh_completions() {
         .args(["generate", "complete-zsh"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("#compdef alx"));
+        .stdout(predicate::str::contains("#compdef sobriquet"));
 }
 
 #[test]
@@ -18,7 +18,7 @@ fn generates_bash_completions() {
         .args(["generate", "complete-bash"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("_alx"));
+        .stdout(predicate::str::contains("_sobriquet"));
 }
 
 #[test]
@@ -36,7 +36,7 @@ fn generates_man_page() {
         .args(["generate", "man"])
         .assert()
         .success()
-        .stdout(predicate::str::contains(".TH ALX 1"))
+        .stdout(predicate::str::contains(".TH SOBRIQUET 1"))
         .stdout(predicate::str::contains(".SH NAME"))
         .stdout(predicate::str::contains(".SH SYNOPSIS"))
         .stdout(predicate::str::contains(".SH DESCRIPTION"))

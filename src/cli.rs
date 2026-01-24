@@ -21,7 +21,7 @@ use crate::shell::{InitShell, Shell, generate_init_script};
 use crate::source::AliasLocation;
 use crate::stats::{UsageRecord, UsageStats, display_stats};
 
-const APP_NAME: &str = "alxrs";
+const APP_NAME: &str = "sobriquet";
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Parser, Debug)]
@@ -334,9 +334,9 @@ pub fn generate_man_page() -> String {
     let date = "2025-01-24";
 
     format!(
-        r#".TH ALX 1 "{date}" "{APP_NAME} {APP_VERSION}" "User Commands"
+        r#".TH SOBRIQUET 1 "{date}" "{APP_NAME} {APP_VERSION}" "User Commands"
 .SH NAME
-alxrs - fuzzy finder for shell aliases
+sobriquet - fuzzy finder for shell aliases
 .SH SYNOPSIS
 .B alx
 [\fIOPTIONS\fR]
@@ -615,7 +615,7 @@ mod tests {
 
     #[test]
     fn parse_empty_args() {
-        let args = Args::try_parse_from(["alxrs"]).unwrap();
+        let args = Args::try_parse_from(["sobriquet"]).unwrap();
         assert!(!args.list);
         assert!(args.shell.is_none());
         assert!(args.command.is_none());
@@ -623,31 +623,31 @@ mod tests {
 
     #[test]
     fn parse_list_flag() {
-        assert!(Args::try_parse_from(["alxrs", "--list"]).unwrap().list);
-        assert!(Args::try_parse_from(["alxrs", "-l"]).unwrap().list);
+        assert!(Args::try_parse_from(["sobriquet", "--list"]).unwrap().list);
+        assert!(Args::try_parse_from(["sobriquet", "-l"]).unwrap().list);
     }
 
     #[test]
     fn parse_shell_option() {
-        let args = Args::try_parse_from(["alxrs", "--shell", "bash"]).unwrap();
+        let args = Args::try_parse_from(["sobriquet", "--shell", "bash"]).unwrap();
         assert_eq!(args.shell, Some(Shell::Bash));
     }
 
     #[test]
     fn parse_query_option() {
-        let args = Args::try_parse_from(["alxrs", "-q", "git"]).unwrap();
+        let args = Args::try_parse_from(["sobriquet", "-q", "git"]).unwrap();
         assert_eq!(args.query, Some("git".to_owned()));
     }
 
     #[test]
     fn parse_format_option() {
-        let args = Args::try_parse_from(["alxrs", "--format", "json"]).unwrap();
+        let args = Args::try_parse_from(["sobriquet", "--format", "json"]).unwrap();
         assert_eq!(args.format, OutputFormat::Json);
     }
 
     #[test]
     fn parse_color_option() {
-        let args = Args::try_parse_from(["alxrs", "--color", "always"]).unwrap();
+        let args = Args::try_parse_from(["sobriquet", "--color", "always"]).unwrap();
         assert_eq!(args.color, Some(ColorChoice::Always));
     }
 

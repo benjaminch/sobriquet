@@ -18,5 +18,5 @@ fn config_path_contains_alx() {
         .arg("config")
         .assert()
         .success()
-        .stdout(predicate::str::contains("alx"));
+        .stdout(predicate::str::contains("sobriquet"));
 }

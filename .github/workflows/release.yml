@@ -105,9 +105,9 @@ jobs:
          shell: bash
          run: |
            if [[ "${{ matrix.os }}" == windows-* ]]; then
-             echo "BIN=target/${{ matrix.target }}/release/alxrs.exe" >> $GITHUB_ENV
+             echo "BIN=target/${{ matrix.target }}/release/sobriquet.exe" >> $GITHUB_ENV
            else
-             echo "BIN=target/${{ matrix.target }}/release/alxrs" >> $GITHUB_ENV
+             echo "BIN=target/${{ matrix.target }}/release/sobriquet" >> $GITHUB_ENV
            fi
 
        - name: Strip binary (Unix)
@@ -118,7 +118,7 @@ jobs:
         shell: bash
         run: |
           version="${{ needs.create-release.outputs.version }}"
-          echo "ARCHIVE=alxrs-$version-${{ matrix.target }}" >> $GITHUB_ENV
+          echo "ARCHIVE=sobriquet-$version-${{ matrix.target }}" >> $GITHUB_ENV
 
       - name: Create archive directory
         shell: bash

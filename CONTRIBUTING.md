@@ -1,4 +1,4 @@
-# Contributing to alxrs
+# Contributing to sobriquet
 
 Thank you for your interest in contributing to alx! This document provides guidelines and instructions for contributing.
 
@@ -47,7 +47,7 @@ Feature suggestions are welcome! Please open an issue with:
 ```bash
 # Clone your fork
 git clone https://github.com/YOUR_USERNAME/alx.git
-cd alxrs
+cd sobriquet
 
 # Build
 cargo build

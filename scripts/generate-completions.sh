@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generate shell completions for alxrs
+# Generate shell completions for sobriquet
 # Usage: ./scripts/generate-completions.sh <output-directory>
 
 set -euo pipefail
@@ -10,12 +10,12 @@ OUTPUT_DIR="${1:-.}"
 mkdir -p "$OUTPUT_DIR/completions"
 
 # Generate Bash completion
-./target/release/alxrs generate completion-bash > "$OUTPUT_DIR/completions/alxrs.bash"
+./target/release/sobriquet generate completion-bash > "$OUTPUT_DIR/completions/sobriquet.bash"
 
 # Generate Zsh completion
-./target/release/alxrs generate completion-zsh > "$OUTPUT_DIR/completions/_alxrs"
+./target/release/sobriquet generate completion-zsh > "$OUTPUT_DIR/completions/_sobriquet"
 
 # Generate Fish completion
-./target/release/alxrs generate completion-fish > "$OUTPUT_DIR/completions/alxrs.fish"
+./target/release/sobriquet generate completion-fish > "$OUTPUT_DIR/completions/sobriquet.fish"
 
 echo "Completions generated in $OUTPUT_DIR/completions"

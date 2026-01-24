@@ -47,18 +47,18 @@ pub enum InitShell {
 pub fn generate_init_script(shell: InitShell) -> &'static str {
     match shell {
         InitShell::Zsh => {
-            r#"# alx - fuzzy finder for shell aliases
+            r#"# sobriquet - fuzzy finder for shell aliases
 # Add this to your ~/.zshrc
 
-alx() {
+sobriquet() {
   case "$1" in
     init|generate|config|stats|audit|--help|-h|--version|-V)
-      command alx "$@"
+      command sobriquet "$@"
       return
       ;;
   esac
   local selected
-  selected=$(command alx "$@" 2>/dev/null)
+  selected=$(command sobriquet "$@" 2>/dev/null)
   local exit_code=$?
   if [[ $exit_code -eq 0 && -n "$selected" ]]; then
     print -z "$selected"
@@ -68,18 +68,18 @@ alx() {
 "#
         }
         InitShell::Bash => {
-            r#"# alx - fuzzy finder for shell aliases
+            r#"# sobriquet - fuzzy finder for shell aliases
 # Add this to your ~/.bashrc
 
-alx() {
+sobriquet() {
   case "$1" in
     init|generate|config|stats|audit|--help|-h|--version|-V)
-      command alx "$@"
+      command sobriquet "$@"
       return
       ;;
   esac
   local selected
-  selected=$(command alx "$@" 2>/dev/null)
+  selected=$(command sobriquet "$@" 2>/dev/null)
   local exit_code=$?
   if [[ $exit_code -eq 0 && -n "$selected" ]]; then
     if [[ -n "$READLINE_LINE" ]] || [[ "${BASH_VERSINFO[0]}" -ge 4 ]]; then
@@ -95,16 +95,16 @@ alx() {
 "#
         }
         InitShell::Fish => {
-            r#"# alx - fuzzy finder for shell aliases
+            r#"# sobriquet - fuzzy finder for shell aliases
 # Add this to your ~/.config/fish/config.fish
 
-function alx --description "Fuzzy finder for shell aliases"
+function sobriquet --description "Fuzzy finder for shell aliases"
   switch $argv[1]
     case init generate config stats audit --help -h --version -V
-      command alx $argv
+      command sobriquet $argv
       return
   end
-  set -l selected (command alx $argv 2>/dev/null)
+  set -l selected (command sobriquet $argv 2>/dev/null)
   set -l exit_code $status
   if test $exit_code -eq 0 -a -n "$selected"
     commandline -r "$selected"
