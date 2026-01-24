@@ -4,7 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/alx.svg)](https://crates.io/crates/alx)
 [![Downloads](https://img.shields.io/crates/d/alx.svg)](https://crates.io/crates/alx)
 [![License](https://img.shields.io/crates/l/alx.svg)](LICENSE)
-[![MSRV](https://img.shields.io/badge/MSRV-1.85-blue.svg)](https://blog.rust-lang.org/)
+[![MSRV](https://img.shields.io/badge/MSRV-1.92-blue.svg)](https://blog.rust-lang.org/)
 
 A fast, fuzzy finder for your shell aliases written in Rust.
 
@@ -355,9 +355,13 @@ In the interactive fuzzy finder:
 
 ## Configuration
 
-Configuration file location: `~/.config/alx/config.toml`
+`alx` looks for configuration in the following locations (in order of priority):
 
-Run `alx config` to see the exact path on your system.
+1. `~/.config/alx/config.toml` (recommended, XDG standard)
+2. `~/.config/alx.toml`
+3. `~/.alx.toml`
+
+Run `alx config` to see which config file is being used (or where to create one).
 
 ```toml
 [ui]
@@ -401,7 +405,7 @@ cargo run --release
 
 ### Minimum Supported Rust Version
 
-The minimum supported Rust version is **1.85.0**.
+The minimum supported Rust version is **1.92.0**.
 
 ## Contributing
 
