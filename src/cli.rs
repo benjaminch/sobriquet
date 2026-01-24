@@ -550,7 +550,9 @@ pub fn run() -> Result<ExitCode> {
                         .and_then(|s| Shell::parse_shell(s))
                         .unwrap_or(Shell::Zsh)
                 });
-                let aliases = collect_aliases(args.shell, &config)?;
+                // For audit, we allow empty aliases (graceful degradation)
+                let aliases =
+                    collect_aliases(args.shell, &config).unwrap_or_default();
                 audit::run_audit(
                     &aliases,
                     shell,
