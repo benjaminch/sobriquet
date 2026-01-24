@@ -1,0 +1,52 @@
+name: Semantic PR
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  semantic-pr:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title follows Conventional Commits
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Types allowed in PR titles
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          # Require a scope (optional)
+          requireScope: false
+          # Scopes allowed (if scope is provided)
+          scopes: |
+            cli
+            shell
+            fzf
+            init
+            completions
+            ci
+            deps
+          # Ensure subject is not empty
+          subjectPattern: ^.+$
+          subjectPatternError: |
+            The subject "{subject}" doesn't match the required pattern.
+            Please provide a meaningful description after the type/scope.
+          # Validate that the PR title doesn't start with WIP
+          wip: true
+          # Validate the PR title format
+          validateSingleCommit: false
