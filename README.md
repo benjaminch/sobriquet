@@ -1,15 +1,15 @@
 # sobriquet
 
 [![CI](https://github.com/benjaminch/sobriquet/actions/workflows/ci.yml/badge.svg)](https://github.com/benjaminch/sobriquet/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/benjaminch/sobriquet/branch/main/graph/badge.svg)](https://codecov.io/gh/benjaminch/alx)
-[![Crates.io](https://img.shields.io/crates/v/alx.svg)](https://crates.io/crates/sobriquet)
-[![Downloads](https://img.shields.io/crates/d/alx.svg)](https://crates.io/crates/sobriquet)
-[![License](https://img.shields.io/crates/l/alx.svg)](LICENSE)
+[![Coverage](https://codecov.io/gh/benjaminch/sobriquet/branch/main/graph/badge.svg)](https://codecov.io/gh/benjaminch/sobriquet)
+[![Crates.io](https://img.shields.io/crates/v/sobriquet.svg)](https://crates.io/crates/sobriquet)
+[![Downloads](https://img.shields.io/crates/d/sobriquet.svg)](https://crates.io/crates/sobriquet)
+[![License](https://img.shields.io/crates/l/sobriquet.svg)](LICENSE)
 [![MSRV](https://img.shields.io/badge/MSRV-1.92-blue.svg)](https://blog.rust-lang.org/)
 
 A fast, fuzzy finder for your shell aliases written in Rust.
 
-`alx` reads your shell aliases and presents them in an interactive fuzzy finder. Select an alias and its expanded command will be placed on your command line, ready to execute or edit.
+`sobriquet` reads your shell aliases and presents them in an interactive fuzzy finder. Select an alias and its expanded command will be placed on your command line, ready to execute or edit.
 
 ## Features
 
@@ -52,7 +52,7 @@ cd sobriquet
 
 # Build and install
 cargo build --release
-cp target/release/alx ~/.local/bin/
+cp target/release/sobriquet ~/.local/bin/
 
 # Or install directly with cargo
 cargo install --path .
@@ -66,33 +66,33 @@ Download the latest binary for your platform from the [Releases](https://github.
 
 ```bash
 # Intel Mac
-curl -LO https://github.com/benjaminch/sobriquet/releases/latest/download/alx-x86_64-apple-darwin.tar.gz
-tar xzf alx-x86_64-apple-darwin.tar.gz
-mv alx-x86_64-apple-darwin/alx ~/.local/bin/
+curl -LO https://github.com/benjaminch/sobriquet/releases/latest/download/sobriquet-x86_64-apple-darwin.tar.gz
+tar xzf sobriquet-x86_64-apple-darwin.tar.gz
+mv sobriquet-x86_64-apple-darwin/sobriquet ~/.local/bin/
 
 # Apple Silicon
-curl -LO https://github.com/benjaminch/sobriquet/releases/latest/download/alx-aarch64-apple-darwin.tar.gz
-tar xzf alx-aarch64-apple-darwin.tar.gz
-mv alx-aarch64-apple-darwin/alx ~/.local/bin/
+curl -LO https://github.com/benjaminch/sobriquet/releases/latest/download/sobriquet-aarch64-apple-darwin.tar.gz
+tar xzf sobriquet-aarch64-apple-darwin.tar.gz
+mv sobriquet-aarch64-apple-darwin/sobriquet ~/.local/bin/
 ```
 
 #### Linux
 
 ```bash
 # x86_64
-curl -LO https://github.com/benjaminch/sobriquet/releases/latest/download/alx-x86_64-unknown-linux-musl.tar.gz
-tar xzf alx-x86_64-unknown-linux-musl.tar.gz
-mv alx-x86_64-unknown-linux-musl/alx ~/.local/bin/
+curl -LO https://github.com/benjaminch/sobriquet/releases/latest/download/sobriquet-x86_64-unknown-linux-musl.tar.gz
+tar xzf sobriquet-x86_64-unknown-linux-musl.tar.gz
+mv sobriquet-x86_64-unknown-linux-musl/sobriquet ~/.local/bin/
 
 # ARM64
-curl -LO https://github.com/benjaminch/sobriquet/releases/latest/download/alx-aarch64-unknown-linux-gnu.tar.gz
-tar xzf alx-aarch64-unknown-linux-gnu.tar.gz
-mv alx-aarch64-unknown-linux-gnu/alx ~/.local/bin/
+curl -LO https://github.com/benjaminch/sobriquet/releases/latest/download/sobriquet-aarch64-unknown-linux-gnu.tar.gz
+tar xzf sobriquet-aarch64-unknown-linux-gnu.tar.gz
+mv sobriquet-aarch64-unknown-linux-gnu/sobriquet ~/.local/bin/
 ```
 
 #### Windows
 
-Download `alx-x86_64-pc-windows-msvc.zip` from the releases page and extract it to a directory in your `PATH`.
+Download `sobriquet-x86_64-pc-windows-msvc.zip` from the releases page and extract it to a directory in your `PATH`.
 
 ### From Cargo
 
@@ -109,7 +109,7 @@ The easiest way to set up shell integration is using the built-in `init` command
 Add this to your `~/.zshrc`:
 
 ```zsh
-eval "$(alx init zsh)"
+eval "$(sobriquet init zsh)"
 ```
 
 ### Bash
@@ -117,7 +117,7 @@ eval "$(alx init zsh)"
 Add this to your `~/.bashrc`:
 
 ```bash
-eval "$(alx init bash)"
+eval "$(sobriquet init bash)"
 ```
 
 ### Fish
@@ -125,18 +125,18 @@ eval "$(alx init bash)"
 Add this to your `~/.config/fish/config.fish`:
 
 ```fish
-alx init fish | source
+sobriquet init fish | source
 ```
 
 After adding the init command, reload your shell or start a new terminal session.
 
 ### Updating Shell Integration
 
-When upgrading `alx` to a new version, you may need to update your shell integration if new subcommands have been added. The easiest way is to re-run the init command:
+When upgrading `sobriquet` to a new version, you may need to update your shell integration if new subcommands have been added. The easiest way is to re-run the init command:
 
 ```bash
 # Check what the current init script looks like
-alx init zsh   # or bash/fish
+sobriquet init zsh   # or bash/fish
 
 # Then update your shell rc file accordingly
 ```
@@ -149,13 +149,13 @@ Generate shell completions for tab-completion support:
 
 ```bash
 # Zsh - add to your fpath
-alx generate complete-zsh > ~/.zsh/completions/_alx
+sobriquet generate complete-zsh > ~/.zsh/completions/_sobriquet
 
 # Bash
-alx generate complete-bash > ~/.local/share/bash-completion/completions/alx
+sobriquet generate complete-bash > ~/.local/share/bash-completion/completions/sobriquet
 
 # Fish
-alx generate complete-fish > ~/.config/fish/completions/alx.fish
+sobriquet generate complete-fish > ~/.config/fish/completions/sobriquet.fish
 ```
 
 ## Man Page
@@ -163,16 +163,16 @@ alx generate complete-fish > ~/.config/fish/completions/alx.fish
 Generate and install the man page:
 
 ```bash
-alx generate man | sudo tee /usr/local/share/man/man1/alx.1
+sobriquet generate man | sudo tee /usr/local/share/man/man1/sobriquet.1
 sudo mandb  # Update man database (Linux)
 ```
 
-Then view it with `man alx`.
+Then view it with `man sobriquet`.
 
 ## Usage
 
 ```
-alx [OPTIONS] [COMMAND]
+sobriquet [OPTIONS] [COMMAND]
 
 Commands:
   init      Initialize shell integration (add to your shell's rc file)
@@ -197,57 +197,57 @@ Options:
 
 ```bash
 # Open interactive fuzzy finder
-alx
+sobriquet
 
 # Start with a pre-filled query
-alx --query git
+sobriquet --query git
 
 # List all aliases (non-interactive)
-alx --list
+sobriquet --list
 
 # List aliases as JSON
-alx --list --format json
+sobriquet --list --format json
 
 # Use a specific shell
-alx --shell bash
+sobriquet --shell bash
 
 # Force refresh the alias cache
-alx --refresh
+sobriquet --refresh
 
 # View usage statistics
-alx stats
+sobriquet stats
 
 # Clear usage statistics
-alx stats clear
+sobriquet stats clear
 
 # Show config file path
-alx config
+sobriquet config
 
 # Audit for secrets and duplicates
-alx audit
+sobriquet audit
 
 # Audit for secrets only
-alx audit secrets
+sobriquet audit secrets
 
 # Audit for duplicates only
-alx audit duplicates
+sobriquet audit duplicates
 
 # Pipe to other commands
-alx --list | grep git
+sobriquet --list | grep git
 
 # Generate shell init script
-alx init zsh
+sobriquet init zsh
 
 # Generate completions
-alx generate complete-zsh > _alx
+sobriquet generate complete-zsh > _sobriquet
 
 # Generate man page
-alx generate man > alx.1
+sobriquet generate man > sobriquet.1
 ```
 
 ## How It Works
 
-1. `alx` runs your shell in interactive mode to get all defined aliases
+1. `sobriquet` runs your shell in interactive mode to get all defined aliases
 2. It parses the output and presents them in a fuzzy finder
 3. When you select an alias, it outputs the **expanded command** (not the alias name)
 4. The shell wrapper function captures this output and places it on your command line
@@ -256,7 +256,7 @@ This approach ensures you see exactly what command will run before executing it,
 
 ## Caching
 
-To improve startup performance, `alx` caches your aliases to `~/.cache/sobriquet/aliases.json`. The cache has a default TTL of 5 minutes (300 seconds).
+To improve startup performance, `sobriquet` caches your aliases to `~/.cache/sobriquet/aliases.json`. The cache has a default TTL of 5 minutes (300 seconds).
 
 - **First run**: ~2 seconds (reads aliases from shell)
 - **Cached run**: ~3 milliseconds
@@ -264,23 +264,23 @@ To improve startup performance, `alx` caches your aliases to `~/.cache/sobriquet
 To force a cache refresh:
 
 ```bash
-alx --refresh
+sobriquet --refresh
 # or
-alx -r
+sobriquet -r
 ```
 
 You can configure the cache TTL in your config file (see Configuration below). Set `cache_ttl = 0` to disable caching.
 
 ## Usage Statistics
 
-`alx` tracks which aliases you use to help you understand your workflow:
+`sobriquet` tracks which aliases you use to help you understand your workflow:
 
 ```bash
 # View statistics (all-time and last 7 days)
-alx stats
+sobriquet stats
 
 # Clear all statistics
-alx stats clear
+sobriquet stats clear
 ```
 
 Statistics are stored in `~/.local/share/sobriquet/stats.json`.
@@ -291,13 +291,13 @@ Check your aliases for potential security issues and duplicates:
 
 ```bash
 # Run all checks (secrets + duplicates)
-alx audit
+sobriquet audit
 
 # Check for embedded secrets only
-alx audit secrets
+sobriquet audit secrets
 
 # Check for duplicate commands only
-alx audit duplicates
+sobriquet audit duplicates
 ```
 
 ### What it detects
@@ -316,7 +316,7 @@ The audit also shows the **file location** where each problematic alias is defin
 
 Example output:
 ```
-alx audit
+sobriquet audit
 
 Scanned 150 aliases
 
