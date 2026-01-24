@@ -28,7 +28,7 @@ jobs:
         include:
           # Minimum supported Rust version
           - os: ubuntu-latest
-            rust: "1.85"
+            rust: "1.92"
           # Stable on all platforms
           - os: ubuntu-latest
             rust: stable
