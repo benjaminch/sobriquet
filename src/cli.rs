@@ -21,7 +21,7 @@ use crate::shell::{InitShell, Shell, generate_init_script};
 use crate::source::AliasLocation;
 use crate::stats::{UsageRecord, UsageStats, display_stats};
 
-const APP_NAME: &str = "alx";
+const APP_NAME: &str = "alxrs";
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Parser, Debug)]
@@ -336,7 +336,7 @@ pub fn generate_man_page() -> String {
     format!(
         r#".TH ALX 1 "{date}" "{APP_NAME} {APP_VERSION}" "User Commands"
 .SH NAME
-alx \- fuzzy finder for shell aliases
+alxrs - fuzzy finder for shell aliases
 .SH SYNOPSIS
 .B alx
 [\fIOPTIONS\fR]
@@ -615,7 +615,7 @@ mod tests {
 
     #[test]
     fn parse_empty_args() {
-        let args = Args::try_parse_from(["alx"]).unwrap();
+        let args = Args::try_parse_from(["alxrs"]).unwrap();
         assert!(!args.list);
         assert!(args.shell.is_none());
         assert!(args.command.is_none());
@@ -623,31 +623,31 @@ mod tests {
 
     #[test]
     fn parse_list_flag() {
-        assert!(Args::try_parse_from(["alx", "--list"]).unwrap().list);
-        assert!(Args::try_parse_from(["alx", "-l"]).unwrap().list);
+        assert!(Args::try_parse_from(["alxrs", "--list"]).unwrap().list);
+        assert!(Args::try_parse_from(["alxrs", "-l"]).unwrap().list);
     }
 
     #[test]
     fn parse_shell_option() {
-        let args = Args::try_parse_from(["alx", "--shell", "bash"]).unwrap();
+        let args = Args::try_parse_from(["alxrs", "--shell", "bash"]).unwrap();
         assert_eq!(args.shell, Some(Shell::Bash));
     }
 
     #[test]
     fn parse_query_option() {
-        let args = Args::try_parse_from(["alx", "-q", "git"]).unwrap();
+        let args = Args::try_parse_from(["alxrs", "-q", "git"]).unwrap();
         assert_eq!(args.query, Some("git".to_owned()));
     }
 
     #[test]
     fn parse_format_option() {
-        let args = Args::try_parse_from(["alx", "--format", "json"]).unwrap();
+        let args = Args::try_parse_from(["alxrs", "--format", "json"]).unwrap();
         assert_eq!(args.format, OutputFormat::Json);
     }
 
     #[test]
     fn parse_color_option() {
-        let args = Args::try_parse_from(["alx", "--color", "always"]).unwrap();
+        let args = Args::try_parse_from(["alxrs", "--color", "always"]).unwrap();
         assert_eq!(args.color, Some(ColorChoice::Always));
     }
 

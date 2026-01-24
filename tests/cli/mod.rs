@@ -14,5 +14,5 @@ mod version;
 use assert_cmd::{Command, cargo::cargo_bin_cmd};
 
 pub fn alx() -> Command {
-    cargo_bin_cmd!("alx")
+    cargo_bin_cmd!("alxrs")
 }

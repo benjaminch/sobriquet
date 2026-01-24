@@ -20,7 +20,7 @@ struct AliasCache {
 
 impl AliasCache {
     fn cache_path() -> Option<PathBuf> {
-        dirs::cache_dir().map(|p| p.join("alx").join("aliases.json"))
+        dirs::cache_dir().map(|p| p.join("alxrs").join("aliases.json"))
     }
 
     fn load() -> Option<Self> {

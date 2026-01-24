@@ -16,7 +16,7 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 
 Instead, please report them via one of the following methods:
 
-1. **GitHub Security Advisories** (Preferred): Use [GitHub's private vulnerability reporting](https://github.com/benjaminch/alx/security/advisories/new)
+1. **GitHub Security Advisories** (Preferred): Use [GitHub's private vulnerability reporting](https://github.com/benjaminch/alxrs/security/advisories/new)
 
 2. **Email**: Contact the maintainer directly at the email address listed in the [Cargo.toml](Cargo.toml) file
 
@@ -65,7 +65,7 @@ This detects:
 
 ### Recommendations
 
-1. **Review aliases regularly**: Use `alx audit` to check for accidentally committed secrets
+1. **Review aliases regularly**: Use `alxrs audit` to check for accidentally committed secrets
 2. **Use environment variables**: Instead of hardcoding secrets in aliases, reference environment variables
 3. **Verify alias sources**: Only source alias files from trusted locations
 
