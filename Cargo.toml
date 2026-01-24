@@ -2,7 +2,7 @@
 name = "alx"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.92"
 description = "Fuzzy finder for shell aliases"
 license = "MIT"
 repository = "https://github.com/benjaminch/alx"
