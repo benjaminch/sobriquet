@@ -106,15 +106,15 @@ pub fn detect_secrets(command: &str) -> Vec<SecretMatch> {
 
     // Check for prefix-based secrets (like sk-ant-xxx)
     for (kind, prefix) in SECRET_PREFIXES {
-        if command.contains(prefix) {
-            if let Some(pos) = command.find(prefix) {
-                let end = command[pos..]
-                    .find(|c: char| c.is_whitespace() || c == '"' || c == '\'')
-                    .map_or(command.len(), |i| pos + i);
-                let snippet = &command[pos..end];
-                let masked = mask_secret(snippet);
-                matches.push(SecretMatch { kind, snippet: masked });
-            }
+        if command.contains(prefix)
+            && let Some(pos) = command.find(prefix)
+        {
+            let end = command[pos..]
+                .find(|c: char| c.is_whitespace() || c == '"' || c == '\'')
+                .map_or(command.len(), |i| pos + i);
+            let snippet = &command[pos..end];
+            let masked = mask_secret(snippet);
+            matches.push(SecretMatch { kind, snippet: masked });
         }
     }
 

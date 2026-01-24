@@ -74,12 +74,11 @@ fn find_alias_in_file(
         }
 
         // Follow source/. includes
-        if let Some(sourced_file) = parse_source_line(trimmed, file) {
-            if let Some(loc) =
+        if let Some(sourced_file) = parse_source_line(trimmed, file)
+            && let Some(loc) =
                 find_alias_in_file(alias_name, &sourced_file, shell, visited)
-            {
-                return Some(loc);
-            }
+        {
+            return Some(loc);
         }
     }
 
@@ -229,15 +228,16 @@ pub fn locate_alias(alias_name: &str, shell: Shell) -> Option<AliasLocation> {
             if let Ok(entries) = fs::read_dir(&file) {
                 for entry in entries.flatten() {
                     let path = entry.path();
-                    if path.is_file() && is_shell_file(&path, shell) {
-                        if let Some(loc) = find_alias_in_file(
+                    if path.is_file()
+                        && is_shell_file(&path, shell)
+                        && let Some(loc) = find_alias_in_file(
                             alias_name,
                             &path,
                             shell,
                             &mut visited,
-                        ) {
-                            return Some(loc);
-                        }
+                        )
+                    {
+                        return Some(loc);
                     }
                 }
             }
