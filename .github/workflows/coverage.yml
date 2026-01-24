@@ -1,0 +1,85 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+# Minimum permissions required
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Generate coverage
+        run: cargo tarpaulin --out xml --output-dir coverage --timeout 300 --exclude-files tests/* benches/* examples/*
+
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/cobertura.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Archive coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+  # Check coverage thresholds
+  coverage-check:
+    name: Coverage Thresholds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Check coverage thresholds
+        run: |
+          # Generate coverage and capture output
+          OUTPUT=$(cargo tarpaulin --timeout 300 2>&1)
+          
+          # Extract coverage percentage
+          COVERAGE=$(echo "$OUTPUT" | grep -oP '\d+\.\d+%' | tail -1 | tr -d '%')
+          
+          echo "📊 Overall coverage: ${COVERAGE}%"
+          
+          # Minimum threshold is 55% (we currently have 58%)
+          # Allow up to 5% drop in new PRs compared to main
+          THRESHOLD=55
+          
+          if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "❌ Coverage is ${COVERAGE}%, below minimum threshold of ${THRESHOLD}%"
+            exit 1
+          else
+            echo "✅ Coverage is ${COVERAGE}%, meets minimum threshold of ${THRESHOLD}%"
+          fi

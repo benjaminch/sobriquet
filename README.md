@@ -1,6 +1,7 @@
 # alx
 
 [![CI](https://github.com/benjaminch/alx/actions/workflows/ci.yml/badge.svg)](https://github.com/benjaminch/alx/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/benjaminch/alx/branch/main/graph/badge.svg)](https://codecov.io/gh/benjaminch/alx)
 [![Crates.io](https://img.shields.io/crates/v/alx.svg)](https://crates.io/crates/alx)
 [![Downloads](https://img.shields.io/crates/d/alx.svg)](https://crates.io/crates/alx)
 [![License](https://img.shields.io/crates/l/alx.svg)](LICENSE)
