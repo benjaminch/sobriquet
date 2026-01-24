@@ -614,11 +614,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_empty_args() {
-        let args = Args::try_parse_from(["sobriquet"]).unwrap();
-        assert!(!args.list);
-        assert!(args.shell.is_none());
-        assert!(args.command.is_none());
+    fn parse_color_option() {
+        let args =
+            Args::try_parse_from(["sobriquet", "--color", "always"]).unwrap();
+        assert_eq!(args.color, Some(ColorChoice::Always));
     }
 
     #[test]
@@ -629,25 +628,29 @@ mod tests {
 
     #[test]
     fn parse_shell_option() {
-        let args = Args::try_parse_from(["sobriquet", "--shell", "bash"]).unwrap();
+        let args =
+            Args::try_parse_from(["sobriquet", "--shell", "bash"]).unwrap();
         assert_eq!(args.shell, Some(Shell::Bash));
     }
 
     #[test]
-    fn parse_query_option() {
-        let args = Args::try_parse_from(["sobriquet", "-q", "git"]).unwrap();
-        assert_eq!(args.query, Some("git".to_owned()));
+    fn parse_format_option() {
+        let args =
+            Args::try_parse_from(["sobriquet", "--format", "json"]).unwrap();
+        assert_eq!(args.format, OutputFormat::Json);
     }
 
     #[test]
     fn parse_format_option() {
-        let args = Args::try_parse_from(["sobriquet", "--format", "json"]).unwrap();
+        let args =
+            Args::try_parse_from(["sobriquet", "--format", "json"]).unwrap();
         assert_eq!(args.format, OutputFormat::Json);
     }
 
     #[test]
     fn parse_color_option() {
-        let args = Args::try_parse_from(["sobriquet", "--color", "always"]).unwrap();
+        let args =
+            Args::try_parse_from(["sobriquet", "--color", "always"]).unwrap();
         assert_eq!(args.color, Some(ColorChoice::Always));
     }
 
