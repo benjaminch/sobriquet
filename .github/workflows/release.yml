@@ -93,32 +93,32 @@ jobs:
         run: cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build release binary
-        shell: bash
-        run: |
-          if [ "${{ matrix.cross }}" = "true" ]; then
-            cross build --release --target ${{ matrix.target }}
-          else
-            cargo build --release --target ${{ matrix.target }}
-          fi
+         shell: bash
+         run: |
+           if [ "${{ matrix.cross }}" = "true" ]; then
+             cross build --release --target ${{ matrix.target }}
+           else
+             cargo build --release --target ${{ matrix.target }}
+           fi
 
-      - name: Determine binary path
-        shell: bash
-        run: |
-          if [[ "${{ matrix.os }}" == windows-* ]]; then
-            echo "BIN=target/${{ matrix.target }}/release/alx.exe" >> $GITHUB_ENV
-          else
-            echo "BIN=target/${{ matrix.target }}/release/alx" >> $GITHUB_ENV
-          fi
+       - name: Determine binary path
+         shell: bash
+         run: |
+           if [[ "${{ matrix.os }}" == windows-* ]]; then
+             echo "BIN=target/${{ matrix.target }}/release/alxrs.exe" >> $GITHUB_ENV
+           else
+             echo "BIN=target/${{ matrix.target }}/release/alxrs" >> $GITHUB_ENV
+           fi
 
-      - name: Strip binary (Unix)
-        if: matrix.os != 'windows-latest' && !matrix.cross
-        run: strip "$BIN"
+       - name: Strip binary (Unix)
+         if: matrix.os != 'windows-latest' && !matrix.cross
+         run: strip "$BIN"
 
       - name: Create archive name
         shell: bash
         run: |
           version="${{ needs.create-release.outputs.version }}"
-          echo "ARCHIVE=alx-$version-${{ matrix.target }}" >> $GITHUB_ENV
+          echo "ARCHIVE=alxrs-$version-${{ matrix.target }}" >> $GITHUB_ENV
 
       - name: Create archive directory
         shell: bash

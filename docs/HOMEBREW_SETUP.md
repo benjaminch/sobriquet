@@ -6,7 +6,7 @@ This document explains how to set up `alx` for distribution via Homebrew.
 
 The `alx` project uses a two-repository approach for Homebrew distribution:
 
-1. **Main Repository** (`benjaminch/alx`) - Contains the source code and release automation
+1. **Main Repository** (`benjaminch/alxrs`) - Contains the source code and release automation
 2. **Homebrew Tap** (`benjaminch/homebrew-alx`) - Contains Homebrew formulas and is updated automatically during releases
 
 ## Automated Release Process
@@ -44,27 +44,27 @@ cat > Formula/alx.rb << 'EOF'
 
 class Alx < Formula
   desc "Fuzzy finder for shell aliases"
-  homepage "https://github.com/benjaminch/alx"
+  homepage "https://github.com/benjaminch/alxrsrs"
   license "MIT"
 
   on_macos do
     on_arm do
-      url "https://github.com/benjaminch/alx/releases/download/1.0.0/alx-1.0.0-aarch64-apple-darwin.tar.gz"
+      url "https://github.com/benjaminch/alxrsrs/releases/download/1.0.0/alx-1.0.0-aarch64-apple-darwin.tar.gz"
       sha256 "SHA256_HASH_HERE"
     end
     on_intel do
-      url "https://github.com/benjaminch/alx/releases/download/1.0.0/alx-1.0.0-x86_64-apple-darwin.tar.gz"
+      url "https://github.com/benjaminch/alxrsrs/releases/download/1.0.0/alx-1.0.0-x86_64-apple-darwin.tar.gz"
       sha256 "SHA256_HASH_HERE"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/benjaminch/alx/releases/download/1.0.0/alx-1.0.0-armv7-unknown-linux-gnueabihf.tar.gz"
+      url "https://github.com/benjaminch/alxrsrs/releases/download/1.0.0/alx-1.0.0-armv7-unknown-linux-gnueabihf.tar.gz"
       sha256 "SHA256_HASH_HERE"
     end
     on_intel do
-      url "https://github.com/benjaminch/alx/releases/download/1.0.0/alx-1.0.0-x86_64-unknown-linux-musl.tar.gz"
+      url "https://github.com/benjaminch/alxrsrs/releases/download/1.0.0/alx-1.0.0-x86_64-unknown-linux-musl.tar.gz"
       sha256 "SHA256_HASH_HERE"
     end
   end
@@ -114,7 +114,7 @@ jobs:
           
           # Download SHA256 files
           gh release download "$version" \
-            --repo benjaminch/alx \
+            --repo benjaminch/alxrs \
             --pattern "*.sha256" \
             --dir /tmp/assets
 
@@ -147,28 +147,28 @@ jobs:
 
 class Alx < Formula
   desc "Fuzzy finder for shell aliases"
-  homepage "https://github.com/benjaminch/alx"
+  homepage "https://github.com/benjaminch/alxrsrs"
   license "MIT"
   version "$VERSION"
 
   on_macos do
     on_arm do
-      url "https://github.com/benjaminch/alx/releases/download/$VERSION/alx-$VERSION-aarch64-apple-darwin.tar.gz"
+      url "https://github.com/benjaminch/alxrsrs/releases/download/$VERSION/alx-$VERSION-aarch64-apple-darwin.tar.gz"
       sha256 "$AARCH64_DARWIN"
     end
     on_intel do
-      url "https://github.com/benjaminch/alx/releases/download/$VERSION/alx-$VERSION-x86_64-apple-darwin.tar.gz"
+      url "https://github.com/benjaminch/alxrsrs/releases/download/$VERSION/alx-$VERSION-x86_64-apple-darwin.tar.gz"
       sha256 "$X86_64_DARWIN"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/benjaminch/alx/releases/download/$VERSION/alx-$VERSION-armv7-unknown-linux-gnueabihf.tar.gz"
+      url "https://github.com/benjaminch/alxrsrs/releases/download/$VERSION/alx-$VERSION-armv7-unknown-linux-gnueabihf.tar.gz"
       sha256 "$ARMV7_LINUX"
     end
     on_intel do
-      url "https://github.com/benjaminch/alx/releases/download/$VERSION/alx-$VERSION-x86_64-unknown-linux-musl.tar.gz"
+      url "https://github.com/benjaminch/alxrsrs/releases/download/$VERSION/alx-$VERSION-x86_64-unknown-linux-musl.tar.gz"
       sha256 "$X86_64_LINUX"
     end
   end
@@ -194,7 +194,7 @@ EOF
 
 ### Step 4: Add PAT Token
 
-In the main `benjaminch/alx` repository:
+In the main `benjaminch/alxrs` repository:
 
 1. Go to Settings → Secrets and variables → Actions
 2. Create a new secret called `HOMEBREW_TAP_TOKEN`
@@ -224,10 +224,10 @@ Once set up, users can install `alx` via Homebrew:
 brew tap benjaminch/homebrew-alx
 
 # Install
-brew install alx
+brew install alxrs
 
 # Upgrade
-brew upgrade alx
+brew upgrade alxrs
 ```
 
 ## Troubleshooting

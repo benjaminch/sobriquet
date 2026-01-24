@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "alx"
+name = "alxrs"
 version = "0.1.0"
 dependencies = [
  "assert_cmd",

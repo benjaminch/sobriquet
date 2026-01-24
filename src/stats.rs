@@ -53,7 +53,7 @@ pub struct UsageEvent {
 
 impl UsageStats {
     pub fn stats_path() -> Option<PathBuf> {
-        dirs::data_local_dir().map(|p| p.join("alx").join("stats.json"))
+        dirs::data_local_dir().map(|p| p.join("alxrs").join("stats.json"))
     }
 
     pub fn load() -> Self {

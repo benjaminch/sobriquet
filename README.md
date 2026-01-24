@@ -1,9 +1,9 @@
-# alx
+# alxrs
 
-[![CI](https://github.com/benjaminch/alx/actions/workflows/ci.yml/badge.svg)](https://github.com/benjaminch/alx/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/benjaminch/alx/branch/main/graph/badge.svg)](https://codecov.io/gh/benjaminch/alx)
-[![Crates.io](https://img.shields.io/crates/v/alx.svg)](https://crates.io/crates/alx)
-[![Downloads](https://img.shields.io/crates/d/alx.svg)](https://crates.io/crates/alx)
+[![CI](https://github.com/benjaminch/alxrs/actions/workflows/ci.yml/badge.svg)](https://github.com/benjaminch/alxrs/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/benjaminch/alxrs/branch/main/graph/badge.svg)](https://codecov.io/gh/benjaminch/alx)
+[![Crates.io](https://img.shields.io/crates/v/alx.svg)](https://crates.io/crates/alxrs)
+[![Downloads](https://img.shields.io/crates/d/alx.svg)](https://crates.io/crates/alxrs)
 [![License](https://img.shields.io/crates/l/alx.svg)](LICENSE)
 [![MSRV](https://img.shields.io/badge/MSRV-1.92-blue.svg)](https://blog.rust-lang.org/)
 
@@ -20,8 +20,8 @@ A fast, fuzzy finder for your shell aliases written in Rust.
 - **Smart detection**: Automatically detects your shell and parses aliases
 - **Cached**: Aliases are cached for instant startup (~3ms vs ~2s)
 - **Smart sorting**: Aliases sorted by frecency (frequency + recency)
-- **Usage tracking**: Track which aliases you use most with `alx stats`
-- **Security audit**: Detect embedded secrets and duplicate aliases with `alx audit`
+- **Usage tracking**: Track which aliases you use most with `alxrs stats`
+- **Security audit**: Detect embedded secrets and duplicate aliases with `alxrs audit`
 - **Rich preview**: Shows command breakdown, shell compatibility, source location, and warnings
 - **Easy setup**: Built-in `init` command for shell integration
 - **Shell completions**: Generate completions for zsh, bash, and fish
@@ -30,7 +30,7 @@ A fast, fuzzy finder for your shell aliases written in Rust.
 ## Demo
 
 ```
-$ alx
+$ alxrs
 > k8s                                 # Type to filter
   k8s_prod -> KUBECONFIG=~/.kube/prod.yaml kubectl
   k8s_staging -> KUBECONFIG=~/.kube/staging.yaml kubectl
@@ -47,8 +47,8 @@ $ KUBECONFIG=~/.kube/prod.yaml kubectl█
 
 ```bash
 # Clone the repository
-git clone https://github.com/benjaminch/alx.git
-cd alx
+git clone https://github.com/benjaminch/alxrs.git
+cd alxrs
 
 # Build and install
 cargo build --release
@@ -60,18 +60,18 @@ cargo install --path .
 
 ### From Releases
 
-Download the latest binary for your platform from the [Releases](https://github.com/benjaminch/alx/releases) page.
+Download the latest binary for your platform from the [Releases](https://github.com/benjaminch/alxrs/releases) page.
 
 #### macOS
 
 ```bash
 # Intel Mac
-curl -LO https://github.com/benjaminch/alx/releases/latest/download/alx-x86_64-apple-darwin.tar.gz
+curl -LO https://github.com/benjaminch/alxrs/releases/latest/download/alx-x86_64-apple-darwin.tar.gz
 tar xzf alx-x86_64-apple-darwin.tar.gz
 mv alx-x86_64-apple-darwin/alx ~/.local/bin/
 
 # Apple Silicon
-curl -LO https://github.com/benjaminch/alx/releases/latest/download/alx-aarch64-apple-darwin.tar.gz
+curl -LO https://github.com/benjaminch/alxrs/releases/latest/download/alx-aarch64-apple-darwin.tar.gz
 tar xzf alx-aarch64-apple-darwin.tar.gz
 mv alx-aarch64-apple-darwin/alx ~/.local/bin/
 ```
@@ -80,12 +80,12 @@ mv alx-aarch64-apple-darwin/alx ~/.local/bin/
 
 ```bash
 # x86_64
-curl -LO https://github.com/benjaminch/alx/releases/latest/download/alx-x86_64-unknown-linux-musl.tar.gz
+curl -LO https://github.com/benjaminch/alxrs/releases/latest/download/alx-x86_64-unknown-linux-musl.tar.gz
 tar xzf alx-x86_64-unknown-linux-musl.tar.gz
 mv alx-x86_64-unknown-linux-musl/alx ~/.local/bin/
 
 # ARM64
-curl -LO https://github.com/benjaminch/alx/releases/latest/download/alx-aarch64-unknown-linux-gnu.tar.gz
+curl -LO https://github.com/benjaminch/alxrs/releases/latest/download/alx-aarch64-unknown-linux-gnu.tar.gz
 tar xzf alx-aarch64-unknown-linux-gnu.tar.gz
 mv alx-aarch64-unknown-linux-gnu/alx ~/.local/bin/
 ```
@@ -97,7 +97,7 @@ Download `alx-x86_64-pc-windows-msvc.zip` from the releases page and extract it 
 ### From Cargo
 
 ```bash
-cargo install alx
+cargo install alxrs
 ```
 
 ## Shell Integration
@@ -256,7 +256,7 @@ This approach ensures you see exactly what command will run before executing it,
 
 ## Caching
 
-To improve startup performance, `alx` caches your aliases to `~/.cache/alx/aliases.json`. The cache has a default TTL of 5 minutes (300 seconds).
+To improve startup performance, `alx` caches your aliases to `~/.cache/alxrs/aliases.json`. The cache has a default TTL of 5 minutes (300 seconds).
 
 - **First run**: ~2 seconds (reads aliases from shell)
 - **Cached run**: ~3 milliseconds
@@ -283,7 +283,7 @@ alx stats
 alx stats clear
 ```
 
-Statistics are stored in `~/.local/share/alx/stats.json`.
+Statistics are stored in `~/.local/share/alxrs/stats.json`.
 
 ## Security Audit
 
@@ -358,11 +358,11 @@ In the interactive fuzzy finder:
 
 `alx` looks for configuration in the following locations (in order of priority):
 
-1. `~/.config/alx/config.toml` (recommended, XDG standard)
+1. `~/.config/alxrs/config.toml` (recommended, XDG standard)
 2. `~/.config/alx.toml`
 3. `~/.alx.toml`
 
-Run `alx config` to see which config file is being used (or where to create one).
+Run `alxrs config` to see which config file is being used (or where to create one).
 
 ```toml
 [ui]
@@ -388,8 +388,8 @@ color = "auto"      # Color mode: auto, always, never
 
 ```bash
 # Clone
-git clone https://github.com/benjaminch/alx.git
-cd alx
+git clone https://github.com/benjaminch/alxrs.git
+cd alxrs
 
 # Build
 cargo build --release
