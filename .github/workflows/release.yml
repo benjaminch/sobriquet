@@ -20,7 +20,7 @@ jobs:
       version: ${{ env.VERSION }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Get version from tag
         run: echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
@@ -81,7 +81,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -160,7 +160,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
        - name: Checkout repository
-         uses: actions/checkout@v4
+         uses: actions/checkout@v6
 
        - name: Install Rust toolchain
          uses: dtolnay/rust-toolchain@stable
