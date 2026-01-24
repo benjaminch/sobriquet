@@ -74,3 +74,4 @@ This detects:
 - **No unsafe code**: The codebase uses `#![forbid(unsafe_code)]`
 - **Dependency auditing**: We use `cargo-audit` in CI to check for known vulnerabilities
 - **Minimal dependencies**: We keep dependencies to a minimum to reduce attack surface
+- **MSRV 1.92**: We maintain a modern Rust version with latest security fixes
