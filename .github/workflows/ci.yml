@@ -43,33 +43,51 @@ jobs:
             rust: nightly
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+       - name: Checkout repository
+         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ matrix.rust }}
+       - name: Install Rust toolchain
+         uses: dtolnay/rust-toolchain@master
+         with:
+           toolchain: ${{ matrix.rust }}
 
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-${{ matrix.rust }}-
+       - name: Cache cargo registry
+         uses: actions/cache@v4
+         with:
+           path: |
+             ~/.cargo/registry
+             ~/.cargo/git
+             target
+           key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+           restore-keys: |
+             ${{ runner.os }}-cargo-${{ matrix.rust }}-
 
-      - name: Build
-        run: cargo build --verbose
+       - name: Build
+         shell: bash
+         run: |
+           if [[ "${{ runner.os }}" == "Windows" ]]; then
+             cargo build --verbose --no-default-features
+           else
+             cargo build --verbose
+           fi
 
-      - name: Run tests
-        run: cargo test --verbose
+       - name: Run tests
+         shell: bash
+         run: |
+           if [[ "${{ runner.os }}" == "Windows" ]]; then
+             cargo test --verbose --no-default-features
+           else
+             cargo test --verbose
+           fi
 
-      - name: Build release
-        run: cargo build --release --verbose
+       - name: Build release
+         shell: bash
+         run: |
+           if [[ "${{ runner.os }}" == "Windows" ]]; then
+             cargo build --release --verbose --no-default-features
+           else
+             cargo build --release --verbose
+           fi
 
   # Cross-compilation tests for additional targets
   cross:
