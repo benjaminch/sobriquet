@@ -103,7 +103,7 @@ impl Config {
 
         // 1. ~/.config/alx/config.toml (primary, XDG standard)
         if let Some(config_dir) = dirs::config_dir() {
-            paths.push(config_dir.join("alxrs").join("config.toml"));
+            paths.push(config_dir.join("sobriquet").join("config.toml"));
         }
 
         // 2. ~/.config/alx.toml (alternative in config dir)

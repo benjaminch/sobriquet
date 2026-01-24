@@ -7,7 +7,7 @@ This project uses automated code coverage tracking to identify untested code pat
 - **Tool**: [cargo-tarpaulin](https://github.com/xd009642/tarpaulin) - Rust code coverage measurement
 - **Platform**: [codecov.io](https://codecov.io/) - Continuous coverage tracking and reporting
 - **Minimum Threshold**: 55% overall coverage, 70% for new code
-- **Current Coverage**: See [codecov dashboard](https://codecov.io/gh/benjaminch/alxrsrs)
+- **Current Coverage**: See [codecov dashboard](https://codecov.io/gh/benjaminch/sobriquetrs)
 
 ## Current Coverage by File
 
@@ -56,7 +56,7 @@ cargo tarpaulin --timeout 600 | grep coverage
 open coverage/index.html
 
 # Or view online at codecov.io
-# https://codecov.io/gh/benjaminch/alxrsrs
+# https://codecov.io/gh/benjaminch/sobriquetrs
 ```
 
 ## Coverage Thresholds

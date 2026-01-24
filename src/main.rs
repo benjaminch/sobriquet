@@ -1,7 +1,7 @@
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
-    match alxrs::run() {
+    match sobriquet::run() {
         Ok(code) => code,
         Err(e) => {
             eprintln!("error: {e}");

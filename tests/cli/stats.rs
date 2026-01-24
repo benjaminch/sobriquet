@@ -7,7 +7,7 @@ use predicates::prelude::*;
 fn stats_command_works() {
     // Stats command should succeed, showing either stats or "no stats yet" message
     alx().arg("stats").assert().success().stdout(
-        predicate::str::contains("alx statistics")
+        predicate::str::contains("sobriquet statistics")
             .or(predicate::str::contains("No statistics yet")),
     );
 }

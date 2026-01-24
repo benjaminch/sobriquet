@@ -9,9 +9,9 @@ fn generates_zsh_init() {
         .args(["init", "zsh"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("alx()"))
+        .stdout(predicate::str::contains("sobriquet()"))
         .stdout(predicate::str::contains("print -z"))
-        .stdout(predicate::str::contains("command alx"))
+        .stdout(predicate::str::contains("command sobriquet"))
         .stdout(predicate::str::contains("audit")); // Verify audit is in passthrough list
 }
 
@@ -21,7 +21,7 @@ fn generates_bash_init() {
         .args(["init", "bash"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("alx()"))
+        .stdout(predicate::str::contains("sobriquet()"))
         .stdout(predicate::str::contains("READLINE_LINE"))
         .stdout(predicate::str::contains("audit"));
 }
@@ -32,7 +32,7 @@ fn generates_fish_init() {
         .args(["init", "fish"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("function alx"))
+        .stdout(predicate::str::contains("function sobriquet"))
         .stdout(predicate::str::contains("commandline"))
         .stdout(predicate::str::contains("audit"));
 }
