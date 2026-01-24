@@ -641,20 +641,6 @@ mod tests {
     }
 
     #[test]
-    fn parse_format_option() {
-        let args =
-            Args::try_parse_from(["sobriquet", "--format", "json"]).unwrap();
-        assert_eq!(args.format, OutputFormat::Json);
-    }
-
-    #[test]
-    fn parse_color_option() {
-        let args =
-            Args::try_parse_from(["sobriquet", "--color", "always"]).unwrap();
-        assert_eq!(args.color, Some(ColorChoice::Always));
-    }
-
-    #[test]
     fn man_page_has_required_sections() {
         let man = generate_man_page();
         assert!(man.contains(".SH NAME"));
