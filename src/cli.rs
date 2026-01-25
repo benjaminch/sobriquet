@@ -291,7 +291,10 @@ fn run_fuzzy_finder(
         writeln!(io::stderr(), "  {}", alias.name)?;
     }
     writeln!(io::stderr())?;
-    writeln!(io::stderr(), "Please use 'alx --list' to see all aliases")?;
+    writeln!(
+        io::stderr(),
+        "Please use 'sobriquet --list' to see all aliases"
+    )?;
 
     Err(AlxError::NoAliasesFound)
 }
@@ -338,29 +341,29 @@ pub fn generate_man_page() -> String {
 .SH NAME
 sobriquet - fuzzy finder for shell aliases
 .SH SYNOPSIS
-.B alx
+.B sobriquet
 [\fIOPTIONS\fR]
 .br
-.B alx
+.B sobriquet
 \fBinit\fR \fISHELL\fR
 .br
-.B alx
+.B sobriquet
 \fBgenerate\fR \fIKIND\fR
 .br
-.B alx
+.B sobriquet
 \fBconfig\fR
 .br
-.B alx
+.B sobriquet
 \fBstats\fR [\fBclear\fR]
 .br
-.B alx
+.B sobriquet
 \fBaudit\fR [\fIKIND\fR]
 .SH DESCRIPTION
-.B alx
+.B sobriquet
 reads your shell aliases and presents them in an interactive fuzzy finder.
 Select an alias and its expanded command will be output to stdout.
 .PP
-Usage is tracked automatically. Use \fBalx stats\fR to view statistics.
+Usage is tracked automatically. Use \fBsobriquet stats\fR to view statistics.
 .SH OPTIONS
 .TP
 .BR \-l ", " \-\-list
@@ -412,7 +415,7 @@ Audit aliases for security issues and duplicates.
 Detects embedded API keys, tokens, passwords, and finds aliases with identical commands.
 Shows file location where each alias is defined.
 .SH CONFIGURATION
-Configuration file: \fI~/.config/alx/config.toml\fR
+Configuration file: \fI~/.config/sobriquet/config.toml\fR
 .PP
 .RS
 .nf
@@ -430,19 +433,19 @@ color = "auto"
 .fi
 .RE
 .SH CACHING
-Aliases are cached to \fI~/.cache/alx/aliases.json\fR for fast startup.
+Aliases are cached to \fI~/.cache/sobriquet/aliases.json\fR for fast startup.
 The default cache TTL is 300 seconds (5 minutes).
 Use \fB\-\-refresh\fR to force a cache update.
 Set \fBcache_ttl = 0\fR in the config to disable caching.
 .SH FILES
 .TP
-.I ~/.config/alx/config.toml
+.I ~/.config/sobriquet/config.toml
 Configuration file
 .TP
-.I ~/.cache/alx/aliases.json
+.I ~/.cache/sobriquet/aliases.json
 Cached aliases
 .TP
-.I ~/.local/share/alx/stats.json
+.I ~/.local/share/sobriquet/stats.json
 Usage statistics
 .SH EXIT STATUS
 .TP
@@ -456,31 +459,31 @@ Cancelled or no aliases
 Error
 .SH EXAMPLES
 .TP
-.B alx
+.B sobriquet
 Open interactive fuzzy finder
 .TP
-.B alx \-\-query git
+.B sobriquet \-\-query git
 Open with "git" pre-filled
 .TP
-.B alx \-\-list
+.B sobriquet \-\-list
 List all aliases
 .TP
-.B alx stats
+.B sobriquet stats
 Show usage statistics
 .TP
-.B alx init zsh >> ~/.zshrc
+.B sobriquet init zsh >> ~/.zshrc
 Add shell integration
 .TP
-.B alx audit
+.B sobriquet audit
 Check for secrets and duplicates
 .TP
-.B alx audit secrets
+.B sobriquet audit secrets
 Check for embedded secrets only
 .SH SEE ALSO
 .BR alias (1),
 .BR fzf (1)
 .SH BUGS
-https://github.com/benjaminch/alx/issues
+https://github.com/benjaminch/sobriquet/issues
 .SH AUTHOR
 Benjamin Chausse
 "#
@@ -690,17 +693,12 @@ mod tests {
             Alias { name: "gs".to_owned(), command: "git status".to_owned() },
             Alias { name: "gc".to_owned(), command: "git commit".to_owned() },
         ];
-
-        // We can't directly test output_aliases since it writes to stdout
-        // But we can verify the function exists and is callable
-        // by using it with a temporary alias list
         assert_eq!(aliases.len(), 2);
         assert_eq!(aliases[0].name, "gs");
     }
 
     #[test]
     fn test_output_format_variants() {
-        // Verify all output format variants exist and are accessible
         let _plain = OutputFormat::Plain;
         let _json = OutputFormat::Json;
         let _pretty = OutputFormat::JsonPretty;
@@ -714,11 +712,8 @@ mod tests {
             Alias { name: "cmd2".to_owned(), command: "echo 2".to_owned() };
         let alias3 =
             Alias { name: "cmd3".to_owned(), command: "echo 3".to_owned() };
-
         let aliases = vec![alias1, alias2, alias3];
         let stats = UsageStats::default();
-
-        // With no usage stats, order should be preserved
         let sorted = sort_by_frecency(&aliases, &stats);
         assert_eq!(sorted.len(), 3);
     }
@@ -728,9 +723,103 @@ mod tests {
         let cmd =
             "KUBECONFIG=~/.kube/config kubectl get pods -o json | jq '.items'";
         let analysis = CommandAnalysis::new(cmd);
-
         assert_eq!(analysis.binary(), Some("kubectl"));
         assert!(analysis.pipe_count() > 0);
+    }
+
+    #[test]
+    fn test_man_page_contains_all_sections() {
+        let man = generate_man_page();
+        assert!(man.contains(".SH DESCRIPTION"));
+        assert!(man.contains(".SH OPTIONS"));
+        assert!(man.contains(".SH SUBCOMMANDS"));
+        assert!(man.contains(".SH CONFIGURATION"));
+        assert!(man.contains(".SH FILES"));
+        assert!(man.contains(".SH EXIT STATUS"));
+        assert!(man.contains(".SH EXAMPLES"));
+    }
+
+    #[test]
+    fn test_man_page_examples_section() {
+        let man = generate_man_page();
+        assert!(man.contains("sobriquet"));
+        assert!(man.contains("\\-\\-list"));
+        assert!(man.contains("stats"));
+        assert!(man.contains("audit"));
+        assert!(man.contains("init"));
+    }
+
+    #[test]
+    fn test_args_defaults() {
+        let args = Args::try_parse_from(["sobriquet"]).unwrap();
+        assert!(!args.list);
+        assert!(!args.refresh);
+        assert!(!args.print_query);
+        assert_eq!(args.format, OutputFormat::Plain);
+        assert!(args.command.is_none());
+    }
+
+    #[test]
+    fn test_shell_option_all_variants() {
+        let zsh =
+            Args::try_parse_from(["sobriquet", "--shell", "zsh"]).unwrap();
+        assert_eq!(zsh.shell, Some(Shell::Zsh));
+        let bash =
+            Args::try_parse_from(["sobriquet", "--shell", "bash"]).unwrap();
+        assert_eq!(bash.shell, Some(Shell::Bash));
+        let fish =
+            Args::try_parse_from(["sobriquet", "--shell", "fish"]).unwrap();
+        assert_eq!(fish.shell, Some(Shell::Fish));
+    }
+
+    #[test]
+    fn test_output_format_json_pretty() {
+        let args =
+            Args::try_parse_from(["sobriquet", "--format", "json-pretty"])
+                .unwrap();
+        assert_eq!(args.format, OutputFormat::JsonPretty);
+    }
+
+    #[test]
+    fn test_short_flags() {
+        let args = Args::try_parse_from(["sobriquet", "-l"]).unwrap();
+        assert!(args.list);
+        let args = Args::try_parse_from(["sobriquet", "-r"]).unwrap();
+        assert!(args.refresh);
+    }
+
+    #[test]
+    fn test_args_with_subcommand() {
+        let args = Args::try_parse_from(["sobriquet", "stats"]).unwrap();
+        assert!(args.command.is_some());
+    }
+
+    #[test]
+    fn test_frecency_with_large_dataset() {
+        let mut aliases = vec![];
+        for i in 0..100 {
+            aliases.push(Alias {
+                name: format!("alias{}", i),
+                command: format!("cmd {}", i),
+            });
+        }
+        let mut stats = UsageStats::default();
+        for i in 0..100 {
+            stats.record_usage(&format!("alias{}", i % 20));
+        }
+        let sorted = sort_by_frecency(&aliases, &stats);
+        assert_eq!(sorted.len(), 100);
+    }
+
+    #[test]
+    fn test_app_version_constant() {
+        assert!(!APP_VERSION.is_empty());
+        assert_eq!(APP_VERSION, env!("CARGO_PKG_VERSION"));
+    }
+
+    #[test]
+    fn test_app_name_constant() {
+        assert_eq!(APP_NAME, "sobriquet");
     }
 
     #[test]
