@@ -262,5 +262,4 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add Formula/sobriquet.rb
-          git diff --cached --quiet || git commit -m "chore: update sobriquet formula to ${{ needs.create-release.outputs.version }}"
-          git diff --quiet || git push
+          git diff --cached --quiet || (git commit -m "chore: update sobriquet formula to ${{ needs.create-release.outputs.version }}" && git push)
