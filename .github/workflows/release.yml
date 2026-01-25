@@ -25,8 +25,9 @@ jobs:
 
       - name: Get version from tag
         run: |
-          VERSION="${{ github.ref_name }}"
-          VERSION="${VERSION#v}"
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          echo "TAG=$TAG" >> $GITHUB_ENV
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Validate version matches Cargo.toml
@@ -39,7 +40,7 @@ jobs:
       - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create $VERSION --draft --verify-tag --title $VERSION
+        run: gh release create $TAG --draft --verify-tag --title $VERSION
 
   build-release:
     name: Build (${{ matrix.name }})
