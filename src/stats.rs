@@ -550,7 +550,7 @@ mod tests {
         assert!(new_score > 0.0);
 
         // Non-existent alias should have 0 score
-        assert_eq!(stats.frecency_score("nonexistent"), 0.0);
+        assert!(stats.frecency_score("nonexistent") == 0.0);
     }
 
     #[test]

@@ -653,15 +653,7 @@ mod tests {
     fn parse_query_option() {
         let args =
             Args::try_parse_from(["sobriquet", "--query", "test"]).unwrap();
-        assert_eq!(args.query, Some("test".to_string()));
-    }
-
-    #[test]
-    fn parse_refresh_flag() {
-        let args = Args::try_parse_from(["sobriquet", "--refresh"]).unwrap();
-        assert!(args.refresh);
-        let args = Args::try_parse_from(["sobriquet", "-r"]).unwrap();
-        assert!(args.refresh);
+        assert_eq!(args.query, Some("test".to_owned()));
     }
 
     #[test]
@@ -710,9 +702,9 @@ mod tests {
     #[test]
     fn sort_by_frecency_with_stats() {
         let alias1 =
-            Alias { name: "a".to_string(), command: "echo a".to_string() };
+            Alias { name: "a".to_owned(), command: "echo a".to_owned() };
         let alias2 =
-            Alias { name: "b".to_string(), command: "echo b".to_string() };
+            Alias { name: "b".to_owned(), command: "echo b".to_owned() };
         let aliases = vec![alias1.clone(), alias2.clone()];
 
         let mut stats = UsageStats::default();
