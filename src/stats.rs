@@ -594,7 +594,7 @@ mod tests {
     fn top_aliases_respects_limit() {
         let mut stats = UsageStats::default();
         for i in 0..10 {
-            for _ in 0..i {
+            for _ in 0..=i {
                 stats.record_usage(&format!("alias{i}"));
             }
         }
@@ -706,7 +706,7 @@ mod tests {
     fn display_stats_multiple_aliases() {
         let mut stats = UsageStats::default();
         for i in 0..5 {
-            for _ in 0..i + 1 {
+            for _ in 0..=i {
                 stats.record_usage(&format!("alias{i}"));
             }
         }
@@ -730,7 +730,7 @@ mod tests {
     fn display_stats_many_aliases() {
         let mut stats = UsageStats::default();
         for i in 0..20 {
-            for _ in 0..((i + 1) % 5 + 1) {
+            for _ in 0..=((i + 1) % 5) {
                 stats.record_usage(&format!("alias{i}"));
             }
         }
@@ -927,7 +927,7 @@ mod tests {
 
         // Record many aliases
         for i in 0..20 {
-            for _ in 0..i + 1 {
+            for _ in 0..=i {
                 stats.record_usage(&format!("alias{i}"));
             }
         }
