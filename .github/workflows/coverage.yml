@@ -67,28 +67,28 @@ jobs:
         run: |
           # Generate coverage and capture output
           # Include lib, bins, and tests to get comprehensive coverage
-          cargo tarpaulin --lib --bins --tests --out xml --output-dir coverage --timeout 300 > /tmp/coverage.txt 2>&1
+          cargo tarpaulin --lib --bins --tests --out stdout --timeout 300 > /tmp/coverage.txt 2>&1
           
-          # Extract coverage percentage from the summary line
-          # Line format: "58.36% coverage, 635/1088 lines covered, ..."
-          # Extract the first field (58.36%) and remove the % sign
-          COVERAGE=$(grep "% coverage," /tmp/coverage.txt | awk '{print $1}' | sed 's/%//' | head -1)
+          # Extract coverage percentage from the final summary line
+          # Line format: "66.42% coverage, 724/1090 lines covered, +0.00% change in coverage"
+          # Use grep with pattern to find the final coverage report, then extract the percentage
+          COVERAGE=$(grep -E "^[0-9]+\.[0-9]+% coverage," /tmp/coverage.txt | tail -1 | sed 's/^\([0-9]*\.[0-9]*\)%.*/\1/')
           
           # Debug: print full output if extraction failed
           if [ -z "$COVERAGE" ]; then
             echo "❌ Could not extract coverage percentage!"
-            echo "Full tarpaulin output (last 30 lines):"
-            tail -30 /tmp/coverage.txt
+            echo "Full tarpaulin output (last 50 lines):"
+            tail -50 /tmp/coverage.txt
             exit 1
           fi
           
-           echo "📊 Overall coverage: ${COVERAGE}%"
-           
-           # Minimum threshold is 65%
-           # Note: Using tarpaulin's measurement which includes lib, bins, and tests
-           # Tarpaulin currently measures 66.42% coverage for this codebase
-           # The codecov.io report may show different percentages due to their own calculation methods
-           THRESHOLD=65
+          echo "📊 Overall coverage: ${COVERAGE}%"
+          
+          # Minimum threshold is 65%
+          # Note: Using tarpaulin's measurement which includes lib, bins, and tests
+          # Tarpaulin currently measures 66.42% coverage for this codebase
+          # The codecov.io report may show different percentages due to their own calculation methods
+          THRESHOLD=65
           
           if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
             echo "❌ Coverage is ${COVERAGE}%, below minimum threshold of ${THRESHOLD}%"
