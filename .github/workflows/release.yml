@@ -165,7 +165,8 @@ jobs:
       - name: Publish to crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --allow-dirty
+        run: cargo publish --allow-dirty || echo "Crate already published"
+        continue-on-error: true
 
   homebrew-tap:
     name: Update Homebrew Tap
