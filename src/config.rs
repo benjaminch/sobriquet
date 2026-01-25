@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 
-pub const DEFAULT_HEIGHT: &str = "50%";
+pub const DEFAULT_HEIGHT: &str = "100%";
 pub const DEFAULT_PROMPT: &str = "Select alias > ";
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
