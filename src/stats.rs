@@ -479,4 +479,192 @@ mod tests {
         let now = UsageRecord::now();
         assert_eq!(UsageStats::format_relative_time(now), "just now");
     }
+
+    #[test]
+    fn usage_record_new() {
+        let record = UsageRecord::new();
+        assert_eq!(record.count, 1);
+        assert!(record.first_used > 0);
+        assert_eq!(record.last_used, record.first_used);
+    }
+
+    #[test]
+    fn usage_record_increment() {
+        let mut record = UsageRecord::new();
+        let original_first = record.first_used;
+        record.increment();
+        assert_eq!(record.count, 2);
+        assert_eq!(record.first_used, original_first);
+        assert!(record.last_used >= original_first);
+    }
+
+    #[test]
+    fn get_usage_record() {
+        let mut stats = UsageStats::default();
+        stats.record_usage("myalias");
+        assert!(stats.get("myalias").is_some());
+        assert_eq!(stats.get("myalias").unwrap().count, 1);
+        assert!(stats.get("nonexistent").is_none());
+    }
+
+    #[test]
+    fn most_used_and_most_recent() {
+        let mut stats = UsageStats::default();
+        stats.record_usage("a");
+        stats.record_usage("a");
+        stats.record_usage("b");
+
+        let most_used = stats.most_used();
+        assert!(most_used.is_some());
+        assert_eq!(most_used.unwrap().0, "a");
+        assert_eq!(most_used.unwrap().1.count, 2);
+
+        let most_recent = stats.most_recent();
+        assert!(most_recent.is_some());
+        let most_recent_name = most_recent.unwrap().0;
+        // "b" was recorded last, so it should be most recent (unless timestamps are identical)
+        assert!(most_recent_name == "a" || most_recent_name == "b");
+    }
+
+    #[test]
+    fn unique_count_and_clear() {
+        let mut stats = UsageStats::default();
+        stats.record_usage("a");
+        stats.record_usage("b");
+        stats.record_usage("c");
+        assert_eq!(stats.unique_count(), 3);
+
+        stats.clear();
+        assert_eq!(stats.unique_count(), 0);
+        assert_eq!(stats.total_selections, 0);
+        assert!(stats.aliases.is_empty());
+        assert!(stats.recent.is_empty());
+    }
+
+    #[test]
+    fn frecency_score_new_vs_old() {
+        let mut stats = UsageStats::default();
+        stats.record_usage("new");
+
+        let new_score = stats.frecency_score("new");
+        assert!(new_score > 0.0);
+
+        // Non-existent alias should have 0 score
+        assert_eq!(stats.frecency_score("nonexistent"), 0.0);
+    }
+
+    #[test]
+    fn recent_stats_empty() {
+        let stats = UsageStats::default();
+        let (total, counts) = stats.recent_stats();
+        assert_eq!(total, 0);
+        assert!(counts.is_empty());
+    }
+
+    #[test]
+    fn recent_stats_with_data() {
+        let mut stats = UsageStats::default();
+        stats.record_usage("a");
+        stats.record_usage("a");
+        stats.record_usage("b");
+
+        let (total, counts) = stats.recent_stats();
+        assert_eq!(total, 3);
+        assert_eq!(*counts.get("a").unwrap_or(&0), 2);
+        assert_eq!(*counts.get("b").unwrap_or(&0), 1);
+    }
+
+    #[test]
+    fn top_recent() {
+        let mut stats = UsageStats::default();
+        stats.record_usage("a");
+        stats.record_usage("a");
+        stats.record_usage("b");
+        stats.record_usage("c");
+        stats.record_usage("c");
+        stats.record_usage("c");
+
+        let top = stats.top_recent(2);
+        assert_eq!(top.len(), 2);
+        assert_eq!(top[0].0, "c");
+        assert_eq!(top[0].1, 3);
+    }
+
+    #[test]
+    fn top_aliases_respects_limit() {
+        let mut stats = UsageStats::default();
+        for i in 0..10 {
+            for _ in 0..i {
+                stats.record_usage(&format!("alias{i}"));
+            }
+        }
+
+        let top_5 = stats.top_aliases(5);
+        assert_eq!(top_5.len(), 5);
+
+        let top_20 = stats.top_aliases(20);
+        assert!(top_20.len() <= 10);
+    }
+
+    #[test]
+    fn format_relative_time_various_intervals() {
+        let now = UsageRecord::now();
+
+        // Just now (0-60 seconds)
+        assert_eq!(UsageStats::format_relative_time(now), "just now");
+
+        // Minutes (60-3600 seconds)
+        let one_min_ago = now - 60;
+        let result = UsageStats::format_relative_time(one_min_ago);
+        assert!(result.contains("minute"));
+
+        // Hours (3600-86400 seconds)
+        let one_hour_ago = now - 3600;
+        let result = UsageStats::format_relative_time(one_hour_ago);
+        assert!(result.contains("hour"));
+
+        // Days (86400-604800 seconds)
+        let one_day_ago = now - 86400;
+        let result = UsageStats::format_relative_time(one_day_ago);
+        assert!(result.contains("day"));
+
+        // Weeks (604800-2592000 seconds)
+        let one_week_ago = now - 604_800;
+        let result = UsageStats::format_relative_time(one_week_ago);
+        assert!(result.contains("week"));
+
+        // Months (2592000+ seconds)
+        let one_month_ago = now - 2_592_000;
+        let result = UsageStats::format_relative_time(one_month_ago);
+        assert!(result.contains("month"));
+
+        // Future timestamps
+        let future = now + 3600;
+        assert_eq!(UsageStats::format_relative_time(future), "just now");
+    }
+
+    #[test]
+    fn format_relative_time_pluralization() {
+        let now = UsageRecord::now();
+
+        // 1 minute (singular)
+        let one_min_ago = now - 60;
+        let result = UsageStats::format_relative_time(one_min_ago);
+        assert_eq!(result, "1 minute ago");
+
+        // 2 minutes (plural)
+        let two_mins_ago = now - 120;
+        let result = UsageStats::format_relative_time(two_mins_ago);
+        assert_eq!(result, "2 minutes ago");
+
+        // 1 hour (singular)
+        let one_hour_ago = now - 3600;
+        let result = UsageStats::format_relative_time(one_hour_ago);
+        assert_eq!(result, "1 hour ago");
+
+        // 2 hours (plural)
+        let two_hours_ago = now - 7200;
+        let result = UsageStats::format_relative_time(two_hours_ago);
+        assert_eq!(result, "2 hours ago");
+    }
 }

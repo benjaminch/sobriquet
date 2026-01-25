@@ -82,13 +82,13 @@ jobs:
             exit 1
           fi
           
-          echo "📊 Overall coverage: ${COVERAGE}%"
-          
-          # Minimum threshold is 50%
-          # Note: Using tarpaulin's measurement which includes lib, bins, and tests
-          # Tarpaulin currently measures 58.36% coverage for this codebase
-          # The codecov.io report may show different percentages due to their own calculation methods
-          THRESHOLD=50
+           echo "📊 Overall coverage: ${COVERAGE}%"
+           
+           # Minimum threshold is 65%
+           # Note: Using tarpaulin's measurement which includes lib, bins, and tests
+           # Tarpaulin currently measures 66.42% coverage for this codebase
+           # The codecov.io report may show different percentages due to their own calculation methods
+           THRESHOLD=65
           
           if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
             echo "❌ Coverage is ${COVERAGE}%, below minimum threshold of ${THRESHOLD}%"

@@ -106,8 +106,7 @@ impl<'a> CommandAnalysis<'a> {
         }
 
         // Bash specific
-        if self.command.contains("declare -")
-            || self.command.contains("local -")
+        if self.command.contains("declare ") || self.command.contains("local ")
         {
             hints.push("bash/zsh: declare/local");
         }
@@ -151,8 +150,13 @@ impl<'a> CommandAnalysis<'a> {
         for (i, part) in parts.iter().enumerate().skip(1) {
             if part.starts_with('-') {
                 flags.push(*part);
-            } else if i == 1 && !part.contains('/') && !part.contains('.') {
+            } else if i == 1
+                && !part.contains('/')
+                && !part.contains('.')
+                && parts.len() > 2
+            {
                 // Likely a subcommand (e.g., "git status", "docker run")
+                // Only treat as subcommand if there are more parts after it
                 subcommand = Some(*part);
             } else {
                 args.push(*part);
@@ -456,5 +460,249 @@ mod tests {
         let similar = find_similar("gs", &names, 3);
         assert!(similar.contains(&"gst"));
         assert!(similar.contains(&"gss"));
+    }
+
+    #[test]
+    fn test_redirect_count() {
+        assert_eq!(
+            CommandAnalysis::new("echo hello > file.txt").redirect_count(),
+            1
+        );
+        assert_eq!(
+            CommandAnalysis::new("cmd 2> error.log > output.txt")
+                .redirect_count(),
+            2
+        );
+        assert_eq!(
+            CommandAnalysis::new("cat < input.txt >> output.txt")
+                .redirect_count(),
+            2
+        );
+        assert_eq!(CommandAnalysis::new("ls").redirect_count(), 0);
+    }
+
+    #[test]
+    fn test_shell_hints_zsh() {
+        assert!(
+            CommandAnalysis::new("echo ${(L)var}")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("zsh"))
+        );
+        assert!(
+            CommandAnalysis::new("cat =(echo test)")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("zsh"))
+        );
+        assert!(
+            CommandAnalysis::new("print -P '%1~'")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("zsh"))
+        );
+        assert!(
+            CommandAnalysis::new("zparseopts -D a=opt")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("zsh"))
+        );
+    }
+
+    #[test]
+    fn test_shell_hints_bash() {
+        assert!(
+            CommandAnalysis::new("declare -r var=1")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("bash/zsh"))
+        );
+        assert!(
+            CommandAnalysis::new("if [[ $x ]]; then echo test; fi")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("extended test"))
+        );
+        assert!(
+            CommandAnalysis::new("shopt -s globstar")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("bash: shopt"))
+        );
+        assert!(
+            CommandAnalysis::new("local var=test")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("bash/zsh"))
+        );
+    }
+
+    #[test]
+    fn test_shell_hints_fish() {
+        assert!(
+            CommandAnalysis::new("set -gx VAR val")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("fish"))
+        );
+        assert!(
+            CommandAnalysis::new("set -Ux VAR val")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("fish"))
+        );
+        assert!(
+            CommandAnalysis::new("string match pattern $var")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("fish"))
+        );
+    }
+
+    #[test]
+    fn test_shell_hints_posix() {
+        assert!(
+            CommandAnalysis::new("ls -la")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("POSIX"))
+        );
+        assert!(
+            CommandAnalysis::new("echo hello")
+                .shell_hints()
+                .iter()
+                .any(|h| h.contains("POSIX"))
+        );
+    }
+
+    #[test]
+    fn test_warnings_dangerous_patterns() {
+        // rm -rf
+        assert!(
+            CommandAnalysis::new("rm -rf /")
+                .warnings()
+                .iter()
+                .any(|w| w.contains("Recursive"))
+        );
+        assert!(
+            CommandAnalysis::new("rm -fr /")
+                .warnings()
+                .iter()
+                .any(|w| w.contains("Recursive"))
+        );
+
+        // sudo rm
+        assert!(
+            CommandAnalysis::new("sudo rm file")
+                .warnings()
+                .iter()
+                .any(|w| w.contains("Sudo delete"))
+        );
+
+        // fork bomb
+        assert!(
+            CommandAnalysis::new(":(){:|:&};:")
+                .warnings()
+                .iter()
+                .any(|w| w.contains("Fork bomb"))
+        );
+
+        // disk write
+        assert!(
+            CommandAnalysis::new("dd if=/dev/zero of=/dev/sda")
+                .warnings()
+                .iter()
+                .any(|w| w.contains("disk"))
+        );
+
+        // chmod
+        assert!(
+            CommandAnalysis::new("chmod 777 /")
+                .warnings()
+                .iter()
+                .any(|w| w.contains("permissive"))
+        );
+        assert!(
+            CommandAnalysis::new("chmod -r 777 /")
+                .warnings()
+                .iter()
+                .any(|w| w.contains("permissive"))
+        );
+
+        // no preserve root
+        assert!(
+            CommandAnalysis::new("rm --no-preserve-root /")
+                .warnings()
+                .iter()
+                .any(|w| w.contains("preserve"))
+        );
+
+        // mkfs
+        assert!(
+            CommandAnalysis::new("mkfs.ext4 /dev/sda1")
+                .warnings()
+                .iter()
+                .any(|w| w.contains("Filesystem"))
+        );
+    }
+
+    #[test]
+    fn test_warnings_case_insensitive() {
+        assert!(!CommandAnalysis::new("RM -RF /").warnings().is_empty());
+        assert!(!CommandAnalysis::new("CHMOD 777 /").warnings().is_empty());
+    }
+
+    #[test]
+    fn test_breakdown_with_env_vars() {
+        let analysis = CommandAnalysis::new("VAR=value CMD arg");
+        let breakdown = analysis.breakdown();
+        assert!(breakdown.env_vars.contains(&"VAR=value"));
+        assert_eq!(breakdown.binary, Some("CMD"));
+        assert!(breakdown.args.contains(&"arg"));
+    }
+
+    #[test]
+    fn test_breakdown_multiple_env_vars() {
+        let analysis = CommandAnalysis::new("VAR1=v1 VAR2=v2 cmd arg");
+        let breakdown = analysis.breakdown();
+        assert_eq!(breakdown.env_vars.len(), 2);
+    }
+
+    #[test]
+    fn test_breakdown_no_subcommand_with_path() {
+        let analysis = CommandAnalysis::new("cmd /path/to/file");
+        let breakdown = analysis.breakdown();
+        assert_eq!(breakdown.subcommand, None);
+        assert!(breakdown.args.contains(&"/path/to/file"));
+    }
+
+    #[test]
+    fn test_breakdown_no_subcommand_with_dot_path() {
+        let analysis = CommandAnalysis::new("cmd ./script.sh");
+        let breakdown = analysis.breakdown();
+        assert_eq!(breakdown.subcommand, None);
+        assert!(breakdown.args.contains(&"./script.sh"));
+    }
+
+    #[test]
+    fn test_pipe_count_ampersand_redirect() {
+        assert_eq!(CommandAnalysis::new("cmd1 |& cmd2").pipe_count(), 1);
+    }
+
+    #[test]
+    fn test_binary_empty_command() {
+        assert_eq!(CommandAnalysis::new("").binary(), None);
+        assert_eq!(CommandAnalysis::new("   ").binary(), None);
+    }
+
+    #[test]
+    fn test_redirect_all_types() {
+        assert_eq!(CommandAnalysis::new("cmd > out").redirect_count(), 1);
+        assert_eq!(CommandAnalysis::new("cmd >> out").redirect_count(), 1);
+        assert_eq!(CommandAnalysis::new("cmd < in").redirect_count(), 1);
+        assert_eq!(CommandAnalysis::new("cmd 2> err").redirect_count(), 1);
+        assert_eq!(CommandAnalysis::new("cmd 2>> err").redirect_count(), 1);
+        assert_eq!(CommandAnalysis::new("cmd &> out").redirect_count(), 1);
+        assert_eq!(CommandAnalysis::new("cmd >& out").redirect_count(), 1);
     }
 }

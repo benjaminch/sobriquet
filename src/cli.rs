@@ -648,4 +648,132 @@ mod tests {
         assert!(man.contains(".SH OPTIONS"));
         assert!(man.contains("stats"));
     }
+
+    #[test]
+    fn parse_query_option() {
+        let args =
+            Args::try_parse_from(["sobriquet", "--query", "test"]).unwrap();
+        assert_eq!(args.query, Some("test".to_string()));
+    }
+
+    #[test]
+    fn parse_refresh_flag() {
+        let args = Args::try_parse_from(["sobriquet", "--refresh"]).unwrap();
+        assert!(args.refresh);
+        let args = Args::try_parse_from(["sobriquet", "-r"]).unwrap();
+        assert!(args.refresh);
+    }
+
+    #[test]
+    fn parse_print_query_flag() {
+        let args =
+            Args::try_parse_from(["sobriquet", "--print-query"]).unwrap();
+        assert!(args.print_query);
+    }
+
+    #[test]
+    fn parse_color_never() {
+        let args =
+            Args::try_parse_from(["sobriquet", "--color", "never"]).unwrap();
+        assert_eq!(args.color, Some(ColorChoice::Never));
+    }
+
+    #[test]
+    fn parse_color_auto() {
+        let args =
+            Args::try_parse_from(["sobriquet", "--color", "auto"]).unwrap();
+        assert_eq!(args.color, Some(ColorChoice::Auto));
+    }
+
+    #[test]
+    fn output_format_default_is_plain() {
+        let args = Args::try_parse_from(["sobriquet"]).unwrap();
+        assert_eq!(args.format, OutputFormat::Plain);
+    }
+
+    #[test]
+    fn parse_json_pretty_format() {
+        let args =
+            Args::try_parse_from(["sobriquet", "--format", "json-pretty"])
+                .unwrap();
+        assert_eq!(args.format, OutputFormat::JsonPretty);
+    }
+
+    #[test]
+    fn sort_by_frecency_empty() {
+        let aliases = vec![];
+        let stats = UsageStats::default();
+        let sorted = sort_by_frecency(&aliases, &stats);
+        assert!(sorted.is_empty());
+    }
+
+    #[test]
+    fn sort_by_frecency_with_stats() {
+        let alias1 =
+            Alias { name: "a".to_string(), command: "echo a".to_string() };
+        let alias2 =
+            Alias { name: "b".to_string(), command: "echo b".to_string() };
+        let aliases = vec![alias1.clone(), alias2.clone()];
+
+        let mut stats = UsageStats::default();
+        for _ in 0..5 {
+            stats.record_usage("b");
+        }
+        for _ in 0..10 {
+            stats.record_usage("a");
+        }
+
+        let sorted = sort_by_frecency(&aliases, &stats);
+        assert_eq!(sorted[0].name, "a");
+        assert_eq!(sorted[1].name, "b");
+    }
+
+    #[test]
+    fn man_page_contains_version() {
+        let man = generate_man_page();
+        assert!(man.contains(APP_VERSION));
+    }
+
+    #[test]
+    fn man_page_contains_subcommands() {
+        let man = generate_man_page();
+        assert!(man.contains("init"));
+        assert!(man.contains("generate"));
+        assert!(man.contains("config"));
+        assert!(man.contains("audit"));
+    }
+
+    #[test]
+    fn parse_multiple_options() {
+        let args = Args::try_parse_from([
+            "sobriquet",
+            "--list",
+            "--format",
+            "json",
+            "--shell",
+            "bash",
+            "--color",
+            "always",
+        ])
+        .unwrap();
+
+        assert!(args.list);
+        assert_eq!(args.format, OutputFormat::Json);
+        assert_eq!(args.shell, Some(Shell::Bash));
+        assert_eq!(args.color, Some(ColorChoice::Always));
+    }
+
+    #[test]
+    fn fish_shell_parsing() {
+        let args =
+            Args::try_parse_from(["sobriquet", "--shell", "fish"]).unwrap();
+        assert_eq!(args.shell, Some(Shell::Fish));
+    }
+
+    #[test]
+    fn output_format_json() {
+        let args =
+            Args::try_parse_from(["sobriquet", "--format", "json"]).unwrap();
+        assert_eq!(args.format, OutputFormat::Json);
+    }
 }
