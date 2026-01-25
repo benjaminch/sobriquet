@@ -93,26 +93,26 @@ jobs:
         run: cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build release binary
-         shell: bash
-         run: |
-           if [ "${{ matrix.cross }}" = "true" ]; then
-             cross build --release --target ${{ matrix.target }}
-           else
-             cargo build --release --target ${{ matrix.target }}
-           fi
+        shell: bash
+        run: |
+          if [ "${{ matrix.cross }}" = "true" ]; then
+            cross build --release --target ${{ matrix.target }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
 
-       - name: Determine binary path
-         shell: bash
-         run: |
-           if [[ "${{ matrix.os }}" == windows-* ]]; then
-             echo "BIN=target/${{ matrix.target }}/release/sobriquet.exe" >> $GITHUB_ENV
-           else
-             echo "BIN=target/${{ matrix.target }}/release/sobriquet" >> $GITHUB_ENV
-           fi
+      - name: Determine binary path
+        shell: bash
+        run: |
+          if [[ "${{ matrix.os }}" == windows-* ]]; then
+            echo "BIN=target/${{ matrix.target }}/release/sobriquet.exe" >> $GITHUB_ENV
+          else
+            echo "BIN=target/${{ matrix.target }}/release/sobriquet" >> $GITHUB_ENV
+          fi
 
-       - name: Strip binary (Unix)
-         if: matrix.os != 'windows-latest' && !matrix.cross
-         run: strip "$BIN"
+      - name: Strip binary (Unix)
+        if: matrix.os != 'windows-latest' && !matrix.cross
+        run: strip "$BIN"
 
       - name: Create archive name
         shell: bash
@@ -153,34 +153,50 @@ jobs:
           version="${{ needs.create-release.outputs.version }}"
           gh release upload "$version" "$ASSET" "$ASSET_SUM"
 
-  # Publish to crates.io
   publish:
     name: Publish to crates.io
     needs: [create-release, build-release]
     runs-on: ubuntu-latest
     steps:
-       - name: Checkout repository
-         uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-       - name: Install Rust toolchain
-         uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-       - name: Publish to crates.io
-         env:
-           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-         run: cargo publish
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish
 
-  # Update Homebrew tap
   homebrew-tap:
     name: Update Homebrew Tap
     needs: [create-release, build-release]
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger homebrew-alx repository workflow
+      - name: Checkout sobriquet repository
+        uses: actions/checkout@v4
+        with:
+          path: sobriquet
+
+      - name: Checkout homebrew-tap repository
+        uses: actions/checkout@v4
+        with:
+          repository: benjaminch/homebrew-tap
+          path: homebrew-tap
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update formula with new version
         env:
-          GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          VERSION: ${{ needs.create-release.outputs.version }}
         run: |
-          version="${{ needs.create-release.outputs.version }}"
-          gh workflow run update-formula.yml \
-            -R benjaminch/homebrew-alx \
-            -f version="$version"
+          cp sobriquet/Formula/sobriquet.rb homebrew-tap/Formula/sobriquet.rb
+
+      - name: Commit and push formula update
+        working-directory: homebrew-tap
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add Formula/sobriquet.rb
+          git commit -m "chore: update sobriquet formula to ${{ needs.create-release.outputs.version }}"
+          git push
