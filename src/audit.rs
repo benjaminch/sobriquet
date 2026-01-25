@@ -460,4 +460,118 @@ mod tests {
         assert!(types.contains(&"API key"));
         assert!(types.contains(&"Token"));
     }
+
+    #[test]
+    fn test_detect_secrets_aws_key() {
+        let secrets = detect_secrets("AKIA2EXAMPLEKEY123");
+        assert!(!secrets.is_empty());
+    }
+
+    #[test]
+    fn test_detect_secrets_password() {
+        let secrets = detect_secrets("password=supersecret123");
+        assert!(!secrets.is_empty());
+    }
+
+    #[test]
+    fn test_has_secret_returns_true() {
+        assert!(has_secret("export GITHUB_TOKEN=ghp_abc123"));
+    }
+
+    #[test]
+    fn test_has_secret_returns_false() {
+        assert!(!has_secret("ls -la /tmp"));
+    }
+
+    #[test]
+    fn test_find_duplicates_single_command() {
+        let aliases = vec![
+            Alias { name: "a".to_owned(), command: "git status".to_owned() },
+            Alias { name: "b".to_owned(), command: "git status".to_owned() },
+            Alias { name: "c".to_owned(), command: "git log".to_owned() },
+        ];
+        let dups = find_duplicates(&aliases, Shell::Zsh);
+        assert_eq!(dups.len(), 1);
+    }
+
+    #[test]
+    fn test_find_duplicates_multiple_commands() {
+        let aliases = vec![
+            Alias { name: "a".to_owned(), command: "echo 1".to_owned() },
+            Alias { name: "b".to_owned(), command: "echo 1".to_owned() },
+            Alias { name: "c".to_owned(), command: "echo 2".to_owned() },
+            Alias { name: "d".to_owned(), command: "echo 2".to_owned() },
+        ];
+        let dups = find_duplicates(&aliases, Shell::Bash);
+        assert_eq!(dups.len(), 2);
+    }
+
+    #[test]
+    fn test_find_duplicates_no_duplicates() {
+        let aliases = vec![
+            Alias { name: "a".to_owned(), command: "unique1".to_owned() },
+            Alias { name: "b".to_owned(), command: "unique2".to_owned() },
+        ];
+        let dups = find_duplicates(&aliases, Shell::Fish);
+        assert!(dups.is_empty());
+    }
+
+    #[test]
+    fn test_get_duplicate_names_with_multiple() {
+        let aliases = vec![
+            Alias { name: "g1".to_owned(), command: "git status".to_owned() },
+            Alias { name: "g2".to_owned(), command: "git status".to_owned() },
+            Alias { name: "g3".to_owned(), command: "git status".to_owned() },
+        ];
+        let dups = get_duplicate_names("git status", "g1", &aliases);
+        assert_eq!(dups.len(), 2);
+    }
+
+    #[test]
+    fn test_get_secret_types_multiple() {
+        let types =
+            get_secret_types("GITHUB_TOKEN=abc AWS_KEY=xyz PASSWORD=test");
+        assert!(types.len() >= 2);
+    }
+
+    #[test]
+    fn test_get_secret_types_empty() {
+        let types = get_secret_types("no secrets here");
+        assert!(types.is_empty());
+    }
+
+    #[test]
+    fn test_detect_secrets_anthropic_key() {
+        let secrets = detect_secrets("sk-ant-v1-example123");
+        assert!(!secrets.is_empty());
+    }
+
+    #[test]
+    fn test_truncate_command_long_string() {
+        let long_cmd = "a".repeat(100);
+        let truncated = truncate_command(&long_cmd, 20);
+        assert!(truncated.len() <= 30);
+    }
+
+    #[test]
+    fn test_truncate_command_short_string() {
+        let short_cmd = "test";
+        let truncated = truncate_command(short_cmd, 20);
+        assert_eq!(truncated.len(), 6);
+    }
+
+    #[test]
+    fn test_find_duplicates_empty_list() {
+        let aliases: Vec<Alias> = vec![];
+        let dups = find_duplicates(&aliases, Shell::Zsh);
+        assert!(dups.is_empty());
+    }
+
+    #[test]
+    fn test_find_duplicates_single_alias() {
+        let aliases =
+            vec![Alias { name: "a".to_owned(), command: "cmd".to_owned() }];
+        let dups = find_duplicates(&aliases, Shell::Zsh);
+        assert!(dups.is_empty());
+    }
 }

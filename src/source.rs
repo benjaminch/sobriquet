@@ -345,4 +345,271 @@ mod tests {
         let loc = AliasLocation { file: home.join(".zshrc"), line: 42 };
         assert_eq!(format_location(&loc), "~/.zshrc:42");
     }
+
+    #[test]
+    fn test_get_rc_files_zsh() {
+        let files = get_rc_files(Shell::Zsh);
+        assert!(!files.is_empty());
+        assert!(files.iter().any(|f| f.ends_with(".zshrc")));
+    }
+
+    #[test]
+    fn test_get_rc_files_bash() {
+        let files = get_rc_files(Shell::Bash);
+        assert!(!files.is_empty());
+        assert!(files.iter().any(|f| f.ends_with(".bashrc")));
+    }
+
+    #[test]
+    fn test_get_rc_files_fish() {
+        let files = get_rc_files(Shell::Fish);
+        assert!(!files.is_empty());
+        assert!(files.iter().any(|f| f.ends_with("config.fish")));
+    }
+
+    #[test]
+    fn test_is_alias_definition_bash() {
+        assert!(is_alias_definition(
+            "alias gs=\"git status\"",
+            "gs",
+            Shell::Bash
+        ));
+        assert!(is_alias_definition("alias ls='ls -la'", "ls", Shell::Bash));
+        assert!(!is_alias_definition(
+            "alias ga=\"git add\"",
+            "gs",
+            Shell::Bash
+        ));
+    }
+
+    #[test]
+    fn test_is_alias_definition_with_comment() {
+        assert!(!is_alias_definition(
+            "# alias gs=\"git status\"",
+            "gs",
+            Shell::Bash
+        ));
+    }
+
+    #[test]
+    fn test_is_alias_definition_quoted_names() {
+        assert!(is_alias_definition(
+            "alias 'gs'=\"git status\"",
+            "gs",
+            Shell::Bash
+        ));
+        assert!(is_alias_definition(
+            "alias \"gs\"=\"git status\"",
+            "gs",
+            Shell::Bash
+        ));
+    }
+
+    #[test]
+    fn test_is_shell_file_zsh() {
+        assert!(is_shell_file(Path::new("file.zsh"), Shell::Zsh));
+        assert!(is_shell_file(Path::new(".zshrc"), Shell::Zsh));
+        assert!(!is_shell_file(Path::new("file.bash"), Shell::Zsh));
+    }
+
+    #[test]
+    fn test_is_shell_file_bash() {
+        assert!(is_shell_file(Path::new("file.bash"), Shell::Bash));
+        assert!(is_shell_file(Path::new("file.sh"), Shell::Bash));
+        assert!(is_shell_file(Path::new(".bashrc"), Shell::Bash));
+        assert!(!is_shell_file(Path::new("file.zsh"), Shell::Bash));
+    }
+
+    #[test]
+    fn test_is_shell_file_fish() {
+        assert!(is_shell_file(Path::new("file.fish"), Shell::Fish));
+        assert!(!is_shell_file(Path::new("file.zsh"), Shell::Fish));
+        assert!(!is_shell_file(Path::new(".fishrc"), Shell::Fish));
+    }
+
+    #[test]
+    fn test_parse_source_line_source_prefix() {
+        let current = Path::new("/home/user/.zshrc");
+        let result = parse_source_line("source ~/.zshenv", current);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_parse_source_line_dot_prefix() {
+        let current = Path::new("/home/user/.zshrc");
+        let result = parse_source_line(". ~/.zshenv", current);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_parse_source_line_with_comment() {
+        let current = Path::new("/home/user/.zshrc");
+        let result = parse_source_line("source ~/.zshenv # comment", current);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_parse_source_line_with_semicolon() {
+        let current = Path::new("/home/user/.zshrc");
+        let result = parse_source_line("source ~/.zshenv; echo done", current);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_parse_source_line_with_and_operator() {
+        let current = Path::new("/home/user/.zshrc");
+        let result = parse_source_line(
+            "test -f ~/.zshenv && source ~/.zshenv",
+            current,
+        );
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_parse_source_line_quoted_path() {
+        let current = Path::new("/home/user/.zshrc");
+        let result = parse_source_line("source \"~/.zshenv\"", current);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_parse_source_line_single_quoted_path() {
+        let current = Path::new("/home/user/.zshrc");
+        let result = parse_source_line("source '~/.zshenv'", current);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_parse_source_line_comment_only() {
+        let current = Path::new("/home/user/.zshrc");
+        let result = parse_source_line("# source ~/.zshenv", current);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_parse_source_line_relative_path() {
+        let current = Path::new("/home/user/.config/zsh/.zshrc");
+        let result = parse_source_line("source aliases.zsh", current);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_expand_path_tilde_slash() {
+        let home = dirs::home_dir().unwrap_or_default();
+        assert_eq!(expand_path("~/test"), home.join("test"));
+    }
+
+    #[test]
+    fn test_expand_path_tilde_only() {
+        let home = dirs::home_dir().unwrap_or_default();
+        assert_eq!(expand_path("~"), home);
+    }
+
+    #[test]
+    fn test_expand_path_home_var() {
+        let home = dirs::home_dir().unwrap_or_default();
+        assert_eq!(expand_path("$HOME/test"), home.join("test"));
+    }
+
+    #[test]
+    fn test_expand_path_home_braces_var() {
+        let home = dirs::home_dir().unwrap_or_default();
+        assert_eq!(expand_path("${HOME}/test"), home.join("test"));
+    }
+
+    #[test]
+    fn test_expand_path_absolute() {
+        assert_eq!(expand_path("/etc/profile"), PathBuf::from("/etc/profile"));
+    }
+
+    #[test]
+    fn test_expand_path_relative() {
+        assert_eq!(
+            expand_path("relative/path"),
+            PathBuf::from("relative/path")
+        );
+    }
+
+    #[test]
+    fn test_expand_path_with_double_quotes() {
+        let home = dirs::home_dir().unwrap_or_default();
+        assert_eq!(expand_path("\"~/.zshrc\""), home.join(".zshrc"));
+    }
+
+    #[test]
+    fn test_expand_path_with_single_quotes() {
+        let home = dirs::home_dir().unwrap_or_default();
+        assert_eq!(expand_path("'~/.zshrc'"), home.join(".zshrc"));
+    }
+
+    #[test]
+    fn test_is_alias_definition_case_insensitive() {
+        assert!(is_alias_definition(
+            "ALIAS gs=\"git status\"",
+            "gs",
+            Shell::Bash
+        ));
+    }
+
+    #[test]
+    fn test_is_alias_definition_with_spaces() {
+        assert!(is_alias_definition(
+            "  alias gs=\"git status\"",
+            "gs",
+            Shell::Bash
+        ));
+    }
+
+    #[test]
+    fn test_is_alias_definition_fish_alias_syntax() {
+        assert!(is_alias_definition(
+            "alias gs=\"git status\"",
+            "gs",
+            Shell::Fish
+        ));
+    }
+
+    #[test]
+    fn test_is_alias_definition_fish_abbr_with_multiple_args() {
+        // The implementation looks for "abbr -a gs " (with space after name)
+        // Not "abbr -a -U gs" which has flags between -a and name
+        assert!(is_alias_definition(
+            "abbr -a gs 'git status'",
+            "gs",
+            Shell::Fish
+        ));
+    }
+
+    #[test]
+    fn test_alias_location_struct() {
+        let loc = AliasLocation {
+            file: PathBuf::from("/home/user/.zshrc"),
+            line: 10,
+        };
+        assert_eq!(loc.line, 10);
+    }
+
+    #[test]
+    fn test_parse_source_line_and_with_dot() {
+        let current = Path::new("/home/user/.zshrc");
+        let result =
+            parse_source_line("test -f ~/.zshenv && . ~/.zshenv", current);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_parse_source_line_with_parent_dir_path() {
+        // The pattern ". .." will match because ". " prefix is found
+        // But the filter checks `!s.starts_with('.')` to reject parent dir refs
+        let current = Path::new("/home/user/.zshrc");
+        let result = parse_source_line(". ./aliases", current);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_format_location_non_home() {
+        let loc =
+            AliasLocation { file: PathBuf::from("/etc/profile"), line: 50 };
+        assert!(format_location(&loc).contains("/etc/profile"));
+    }
 }

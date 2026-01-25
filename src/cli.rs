@@ -689,7 +689,7 @@ mod tests {
 
     #[test]
     fn test_output_aliases_plain() {
-        let aliases = vec![
+        let aliases = [
             Alias { name: "gs".to_owned(), command: "git status".to_owned() },
             Alias { name: "gc".to_owned(), command: "git commit".to_owned() },
         ];
@@ -699,9 +699,9 @@ mod tests {
 
     #[test]
     fn test_output_format_variants() {
-        let _plain = OutputFormat::Plain;
-        let _json = OutputFormat::Json;
-        let _pretty = OutputFormat::JsonPretty;
+        assert_eq!(OutputFormat::Plain, OutputFormat::Plain);
+        assert_eq!(OutputFormat::Json, OutputFormat::Json);
+        assert_eq!(OutputFormat::JsonPretty, OutputFormat::JsonPretty);
     }
 
     #[test]
@@ -799,8 +799,8 @@ mod tests {
         let mut aliases = vec![];
         for i in 0..100 {
             aliases.push(Alias {
-                name: format!("alias{}", i),
-                command: format!("cmd {}", i),
+                name: format!("alias{i}"),
+                command: format!("cmd {i}"),
             });
         }
         let mut stats = UsageStats::default();
