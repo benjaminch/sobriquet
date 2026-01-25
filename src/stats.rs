@@ -667,4 +667,304 @@ mod tests {
         let result = UsageStats::format_relative_time(two_hours_ago);
         assert_eq!(result, "2 hours ago");
     }
+
+    #[test]
+    fn display_stats_empty() {
+        let stats = UsageStats::default();
+        let result = display_stats(&stats, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn display_stats_with_data() {
+        let mut stats = UsageStats::default();
+        stats.record_usage("test_alias");
+        stats.record_usage("test_alias");
+        stats.record_usage("another");
+
+        let result = display_stats(&stats, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn display_stats_with_colors() {
+        let mut stats = UsageStats::default();
+        stats.record_usage("test");
+        let result = display_stats(&stats, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn display_stats_without_colors() {
+        let mut stats = UsageStats::default();
+        stats.record_usage("test");
+        let result = display_stats(&stats, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn display_stats_multiple_aliases() {
+        let mut stats = UsageStats::default();
+        for i in 0..5 {
+            for _ in 0..i + 1 {
+                stats.record_usage(&format!("alias{i}"));
+            }
+        }
+
+        let result = display_stats(&stats, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn display_stats_with_most_recent() {
+        let mut stats = UsageStats::default();
+        stats.record_usage("first");
+        stats.record_usage("second");
+        stats.record_usage("second");
+
+        let result = display_stats(&stats, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn display_stats_many_aliases() {
+        let mut stats = UsageStats::default();
+        for i in 0..20 {
+            for _ in 0..((i + 1) % 5 + 1) {
+                stats.record_usage(&format!("alias{i}"));
+            }
+        }
+
+        let result = display_stats(&stats, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn format_relative_time_boundary_values() {
+        let now = UsageRecord::now();
+
+        // Test boundaries between intervals
+        // 59 seconds = "just now"
+        let fifty_nine_secs_ago = now - 59;
+        assert_eq!(
+            UsageStats::format_relative_time(fifty_nine_secs_ago),
+            "just now"
+        );
+
+        // 60 seconds = "1 minute ago"
+        let sixty_secs_ago = now - 60;
+        assert_eq!(
+            UsageStats::format_relative_time(sixty_secs_ago),
+            "1 minute ago"
+        );
+
+        // 3599 seconds = should be minutes
+        let hours_boundary_1 = now - 3599;
+        let result = UsageStats::format_relative_time(hours_boundary_1);
+        assert!(result.contains("minute"));
+
+        // 3600 seconds = "1 hour ago"
+        let hours_boundary_2 = now - 3600;
+        assert_eq!(
+            UsageStats::format_relative_time(hours_boundary_2),
+            "1 hour ago"
+        );
+
+        // 86399 seconds = should be hours
+        let days_boundary_1 = now - 86399;
+        let result = UsageStats::format_relative_time(days_boundary_1);
+        assert!(result.contains("hour"));
+
+        // 86400 seconds = "1 day ago"
+        let days_boundary_2 = now - 86400;
+        assert_eq!(
+            UsageStats::format_relative_time(days_boundary_2),
+            "1 day ago"
+        );
+    }
+
+    #[test]
+    fn format_relative_time_large_values() {
+        let now = UsageRecord::now();
+
+        // 30 days
+        let thirty_days_ago = now - (30 * 86400);
+        let result = UsageStats::format_relative_time(thirty_days_ago);
+        assert!(result.contains("month"));
+
+        // 365 days
+        let year_ago = now - (365 * 86400);
+        let result = UsageStats::format_relative_time(year_ago);
+        assert!(result.contains("month"));
+    }
+
+    #[test]
+    fn format_relative_time_day_pluralization() {
+        let now = UsageRecord::now();
+
+        // 1 day (singular)
+        let one_day_ago = now - 86400;
+        let result = UsageStats::format_relative_time(one_day_ago);
+        assert_eq!(result, "1 day ago");
+
+        // 2 days (plural)
+        let two_days_ago = now - (2 * 86400);
+        let result = UsageStats::format_relative_time(two_days_ago);
+        assert_eq!(result, "2 days ago");
+
+        // 1 week (singular)
+        let one_week_ago = now - 604_800;
+        let result = UsageStats::format_relative_time(one_week_ago);
+        assert_eq!(result, "1 week ago");
+
+        // 2 weeks (plural)
+        let two_weeks_ago = now - (2 * 604_800);
+        let result = UsageStats::format_relative_time(two_weeks_ago);
+        assert_eq!(result, "2 weeks ago");
+
+        // 1 month (singular)
+        let one_month_ago = now - 2_592_000;
+        let result = UsageStats::format_relative_time(one_month_ago);
+        assert_eq!(result, "1 month ago");
+
+        // 2 months (plural)
+        let two_months_ago = now - (2 * 2_592_000);
+        let result = UsageStats::format_relative_time(two_months_ago);
+        assert_eq!(result, "2 months ago");
+    }
+
+    #[test]
+    fn usage_stats_prune_old_events() {
+        let mut stats = UsageStats::default();
+        let now = UsageRecord::now();
+
+        // Add an old event (beyond 7 days)
+        let old_timestamp = now - (8 * 24 * 60 * 60);
+        stats.recent.push(UsageEvent {
+            alias: "old".to_owned(),
+            timestamp: old_timestamp,
+        });
+
+        // Add a new event
+        stats
+            .recent
+            .push(UsageEvent { alias: "new".to_owned(), timestamp: now });
+
+        // Prune should remove old event
+        stats.prune_old_events();
+
+        // Only new event should remain
+        assert_eq!(stats.recent.len(), 1);
+        assert_eq!(stats.recent[0].alias, "new");
+    }
+
+    #[test]
+    fn frecency_score_decay() {
+        let mut stats = UsageStats::default();
+
+        // Create a record that was used long ago
+        let now = UsageRecord::now();
+        let old_time = now - (7 * 24 * 60 * 60); // 7 days ago
+
+        stats.aliases.insert(
+            "old".to_owned(),
+            UsageRecord {
+                count: 10,
+                last_used: old_time,
+                first_used: old_time,
+            },
+        );
+
+        // Create a record that was used just now
+        stats.aliases.insert(
+            "new".to_owned(),
+            UsageRecord { count: 10, last_used: now, first_used: now },
+        );
+
+        let old_score = stats.frecency_score("old");
+        let new_score = stats.frecency_score("new");
+
+        // New score should be higher (less decay)
+        assert!(new_score > old_score);
+    }
+
+    #[test]
+    fn frecency_score_high_count_vs_recent() {
+        let mut stats = UsageStats::default();
+        let now = UsageRecord::now();
+
+        // High count, old record
+        stats.aliases.insert(
+            "frequent_old".to_owned(),
+            UsageRecord {
+                count: 100,
+                last_used: now - (30 * 86400),
+                first_used: 0,
+            },
+        );
+
+        // Low count, recent record
+        stats.aliases.insert(
+            "rare_recent".to_owned(),
+            UsageRecord {
+                count: 5,
+                last_used: now - 60,
+                first_used: now - 60,
+            },
+        );
+
+        let frequent_old_score = stats.frecency_score("frequent_old");
+        let rare_recent_score = stats.frecency_score("rare_recent");
+
+        // Both should be positive
+        assert!(frequent_old_score > 0.0);
+        assert!(rare_recent_score > 0.0);
+    }
+
+    #[test]
+    fn top_recent_respects_limit() {
+        let mut stats = UsageStats::default();
+
+        // Record many aliases
+        for i in 0..20 {
+            for _ in 0..i + 1 {
+                stats.record_usage(&format!("alias{i}"));
+            }
+        }
+
+        let top_5 = stats.top_recent(5);
+        assert!(top_5.len() <= 5);
+
+        let top_all = stats.top_recent(1000);
+        assert!(top_all.len() <= 20);
+    }
+
+    #[test]
+    fn usage_stats_path_exists() {
+        let path = UsageStats::stats_path();
+        assert!(path.is_some());
+        let path_buf = path.unwrap();
+        let path_str = path_buf.to_string_lossy();
+        assert!(path_str.contains("sobriquet"));
+        assert!(path_str.contains("stats.json"));
+    }
+
+    #[test]
+    fn usage_record_now_returns_nonzero() {
+        let now = UsageRecord::now();
+        assert!(now > 0);
+    }
+
+    #[test]
+    fn usage_record_first_and_last_used_same_on_creation() {
+        let record = UsageRecord::new();
+        assert_eq!(record.first_used, record.last_used);
+    }
+
+    #[test]
+    fn stats_path_contains_sobriquet_dir() {
+        if let Some(path) = UsageStats::stats_path() {
+            assert!(path.to_string_lossy().contains("sobriquet"));
+        }
+    }
 }
