@@ -63,13 +63,36 @@ Start typing to search, press Enter to select.
 
 ## Installation
 
-### From Cargo (Recommended)
+### From Homebrew
+
+```bash
+brew tap benjaminch/tap
+brew install sobriquet
+```
+
+### From AUR (Arch Linux)
+
+```bash
+yay -S sobriquet
+# or
+paru -S sobriquet
+```
+
+Or manually:
+
+```bash
+git clone https://aur.archlinux.org/sobriquet.git
+cd sobriquet
+makepkg -si
+```
+
+### From Cargo (Recommended for other systems)
 
 ```bash
 cargo install sobriquet
 ```
 
-This installs `sobriquet` globally and is the easiest way to get started.
+This installs `sobriquet` globally and works on any system with Rust installed.
 
 ### From Source
 
