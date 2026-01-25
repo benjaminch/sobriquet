@@ -184,11 +184,77 @@ jobs:
           path: homebrew-tap
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update formula with new version
+      - name: Calculate SHA256 checksums and generate formula
         env:
           VERSION: ${{ needs.create-release.outputs.version }}
+          TAG: ${{ needs.create-release.outputs.tag }}
         run: |
-          cp sobriquet/Formula/sobriquet.rb homebrew-tap/Formula/sobriquet.rb
+          cd homebrew-tap
+          
+          # Download source and calculate SHA256
+          SOURCE_URL="https://github.com/benjaminch/sobriquet/archive/refs/tags/${TAG}.tar.gz"
+          curl -L -o /tmp/source.tar.gz "$SOURCE_URL"
+          SOURCE_SHA=$(shasum -a 256 /tmp/source.tar.gz | awk '{print $1}')
+          echo "SOURCE_SHA=$SOURCE_SHA" >> $GITHUB_ENV
+          
+          # Download binaries and calculate SHA256s
+          RELEASE_URL="https://github.com/benjaminch/sobriquet/releases/download/${TAG}"
+          
+          # aarch64-apple-darwin
+          curl -L -o /tmp/aarch64-apple-darwin.tar.gz "${RELEASE_URL}/sobriquet-${VERSION}-aarch64-apple-darwin.tar.gz"
+          AARCH64_DARWIN=$(shasum -a 256 /tmp/aarch64-apple-darwin.tar.gz | awk '{print $1}')
+          echo "AARCH64_DARWIN=$AARCH64_DARWIN" >> $GITHUB_ENV
+          
+          # x86_64-apple-darwin
+          curl -L -o /tmp/x86_64-apple-darwin.tar.gz "${RELEASE_URL}/sobriquet-${VERSION}-x86_64-apple-darwin.tar.gz"
+          X86_64_DARWIN=$(shasum -a 256 /tmp/x86_64-apple-darwin.tar.gz | awk '{print $1}')
+          echo "X86_64_DARWIN=$X86_64_DARWIN" >> $GITHUB_ENV
+          
+          # x86_64-unknown-linux-musl
+          curl -L -o /tmp/x86_64-linux.tar.gz "${RELEASE_URL}/sobriquet-${VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          X86_64_LINUX=$(shasum -a 256 /tmp/x86_64-linux.tar.gz | awk '{print $1}')
+          echo "X86_64_LINUX=$X86_64_LINUX" >> $GITHUB_ENV
+
+      - name: Update formula with real checksums
+        env:
+          VERSION: ${{ needs.create-release.outputs.version }}
+          TAG: ${{ needs.create-release.outputs.tag }}
+        run: |
+          cat > homebrew-tap/Formula/sobriquet.rb << 'FORMULA_EOF'
+          class Sobriquet < Formula
+            desc "Fuzzy finder for shell aliases"
+            homepage "https://github.com/benjaminch/sobriquet"
+            url "https://github.com/benjaminch/sobriquet/archive/refs/tags/${{ env.TAG }}.tar.gz"
+            sha256 "${{ env.SOURCE_SHA }}"
+            license "MIT"
+
+            bottle do
+              root_url "https://github.com/benjaminch/sobriquet/releases/download/${{ env.TAG }}"
+              sha256 cellar: :any_skip_relocation, arm64_sequoia:  "${{ env.AARCH64_DARWIN }}"
+              sha256 cellar: :any_skip_relocation, arm64_sonoma:   "${{ env.AARCH64_DARWIN }}"
+              sha256 cellar: :any_skip_relocation, arm64_ventura:  "${{ env.AARCH64_DARWIN }}"
+              sha256 cellar: :any_skip_relocation, x86_64_linux:   "${{ env.X86_64_LINUX }}"
+            end
+
+            depends_on "rust" => :build
+
+            def install
+              system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+            end
+
+            def post_install
+              shell_integration = Utils.popen_read("#{bin}/sobriquet init bash")
+              puts "To set up shell integration, add this to your shell profile:"
+              puts "eval \"$(#{bin}/sobriquet init zsh)\"   # for zsh"
+              puts "eval \"$(#{bin}/sobriquet init bash)\"  # for bash"
+              puts "#{bin}/sobriquet init fish | source      # for fish"
+            end
+
+            test do
+              system "#{bin}/sobriquet", "--version"
+            end
+          end
+          FORMULA_EOF
 
       - name: Commit and push formula update
         working-directory: homebrew-tap
