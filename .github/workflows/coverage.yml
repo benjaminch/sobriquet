@@ -66,9 +66,9 @@ jobs:
       - name: Check coverage thresholds
         run: |
           # Generate coverage and capture output
-          OUTPUT=$(cargo tarpaulin --timeout 300 2>&1)
+          OUTPUT=$(cargo tarpaulin --out xml --output-dir coverage --timeout 300 2>&1)
           
-          # Extract coverage percentage
+          # Extract coverage percentage from summary line
           COVERAGE=$(echo "$OUTPUT" | grep -oP '\d+\.\d+%' | tail -1 | tr -d '%')
           
           echo "📊 Overall coverage: ${COVERAGE}%"
