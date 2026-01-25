@@ -7,54 +7,75 @@
 [![License](https://img.shields.io/crates/l/sobriquet.svg)](LICENSE)
 [![MSRV](https://img.shields.io/badge/MSRV-1.92-blue.svg)](https://blog.rust-lang.org/)
 
-A fast, fuzzy finder for your shell aliases written in Rust.
+> **your shell aliases, but better**
 
-`sobriquet` reads your shell aliases and presents them in an interactive fuzzy finder. Select an alias and its expanded command will be placed on your command line, ready to execute or edit.
+## The Problem
+
+I have quite a few shell aliases, especially for my daily work dealing with a lot of Kubernetes clusters and configurations. Unfortunately, I don't always remember all of them. 
+
+I know they're there but always have a typo in them, and it's created a lot of frustration. I'd spend more time trying to recall or correct an alias than actually running the command.
+
+**sobriquet** solves this.
+
+## What is sobriquet?
+
+`sobriquet` is a blazingly fast fuzzy finder for your shell aliases. It reads your aliases and presents them in a beautiful, full-screen interactive search interface. Just type to search, preview the exact command before executing it, and press Enter to run it.
+
+Think of it like [Atuin](https://github.com/atuinsh/atuin) but for your aliases instead of shell history.
 
 ## Features
 
-- **Fast**: Written in Rust with minimal dependencies
-- **Interactive**: Fuzzy search through all your aliases using [skim](https://github.com/lotabout/skim)
-- **Cross-platform**: Works on macOS, Linux, and Windows
-- **Multi-shell**: Supports zsh, bash, and fish
-- **Smart detection**: Automatically detects your shell and parses aliases
-- **Cached**: Aliases are cached for instant startup (~3ms vs ~2s)
-- **Smart sorting**: Aliases sorted by frecency (frequency + recency)
-- **Usage tracking**: Track which aliases you use most with `sobriquet stats`
-- **Security audit**: Detect embedded secrets and duplicate aliases with `sobriquet audit`
-- **Rich preview**: Shows command breakdown, shell compatibility, source location, and warnings
-- **Easy setup**: Built-in `init` command for shell integration
-- **Shell completions**: Generate completions for zsh, bash, and fish
-- **Man page**: Built-in man page generation
+- 🚀 **Blazingly Fast** - Written in Rust with minimal dependencies, startup time is ~3ms
+- 🔍 **Full-Screen Search** - Beautiful, distraction-free fuzzy finder
+- 📊 **Frecency Sorting** - Smartly sorts aliases by frequency and recency
+- 🖥️ **Cross-Platform** - Works on macOS, Linux, and Windows
+- 🐚 **Multi-Shell** - Supports zsh, bash, and fish
+- 🚨 **Security Audit** - Detect embedded secrets and duplicate aliases
+- 💾 **Smart Caching** - Instant startup with automatic cache invalidation
+- 📈 **Usage Tracking** - See your most-used aliases with built-in stats
+- 👁️ **Rich Preview** - Command breakdown, warnings, source location, and more
+- ⚡ **Zero Config** - Works out of the box, but customizable if you want
+- 📚 **Shell Integration** - Built-in `init` command for easy setup
+- 🔄 **Shell Completions** - Generate completions for zsh, bash, and fish
 
-## Demo
+## Quick Demo
 
 ```
-$ sobriquet
-> k8s                                 # Type to filter
-  k8s_prod -> KUBECONFIG=~/.kube/prod.yaml kubectl
-  k8s_staging -> KUBECONFIG=~/.kube/staging.yaml kubectl
-  k8s_logs -> kubectl logs -f --tail=100
-  3/150
-
-# Press Enter to select, and the command appears on your command line
-$ KUBECONFIG=~/.kube/prod.yaml kubectl█
+$ sq
+┌─ sobriquet ────────────────────────────────────────┐
+│ k8s▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁  3/150           │
+├──────────────────────────────────────────────────────┤
+│ > k8s_prod                                           │
+│ > k8s_staging                                        │
+│ > k8s_logs                                           │
+│                                                      │
+│ ────────────────────────────────────────────────────│
+│ KUBECONFIG=~/.kube/prod.yaml kubectl               │
+│ ────────────────────────────────────────────────────│
+│ Command: kubectl                                     │
+│ Args: (none)                                         │
+│ Source: ~/.zshrc:42                                  │
+│ Usage: 157 times (last used 2 hours ago)            │
+└──────────────────────────────────────────────────────┘
 ```
+
+Start typing to search, press Enter to select.
 
 ## Installation
 
-### From Source (Recommended)
+### From Cargo (Recommended)
 
 ```bash
-# Clone the repository
+cargo install sobriquet
+```
+
+This installs `sobriquet` globally and is the easiest way to get started.
+
+### From Source
+
+```bash
 git clone https://github.com/benjaminch/sobriquet.git
 cd sobriquet
-
-# Build and install
-cargo build --release
-cp target/release/sobriquet ~/.local/bin/
-
-# Or install directly with cargo
 cargo install --path .
 ```
 
@@ -65,15 +86,15 @@ Download the latest binary for your platform from the [Releases](https://github.
 #### macOS
 
 ```bash
-# Intel Mac
-curl -LO https://github.com/benjaminch/sobriquet/releases/latest/download/sobriquet-x86_64-apple-darwin.tar.gz
-tar xzf sobriquet-x86_64-apple-darwin.tar.gz
-mv sobriquet-x86_64-apple-darwin/sobriquet ~/.local/bin/
-
 # Apple Silicon
 curl -LO https://github.com/benjaminch/sobriquet/releases/latest/download/sobriquet-aarch64-apple-darwin.tar.gz
 tar xzf sobriquet-aarch64-apple-darwin.tar.gz
 mv sobriquet-aarch64-apple-darwin/sobriquet ~/.local/bin/
+
+# Intel
+curl -LO https://github.com/benjaminch/sobriquet/releases/latest/download/sobriquet-x86_64-apple-darwin.tar.gz
+tar xzf sobriquet-x86_64-apple-darwin.tar.gz
+mv sobriquet-x86_64-apple-darwin/sobriquet ~/.local/bin/
 ```
 
 #### Linux
@@ -94,15 +115,9 @@ mv sobriquet-aarch64-unknown-linux-gnu/sobriquet ~/.local/bin/
 
 Download `sobriquet-x86_64-pc-windows-msvc.zip` from the releases page and extract it to a directory in your `PATH`.
 
-### From Cargo
+## Setup
 
-```bash
-cargo install sobriquet
-```
-
-## Shell Integration
-
-The easiest way to set up shell integration is using the built-in `init` command:
+After installing, set up shell integration. The easiest way is to use the built-in `init` command:
 
 ### Zsh
 
@@ -128,27 +143,79 @@ Add this to your `~/.config/fish/config.fish`:
 sobriquet init fish | source
 ```
 
-After adding the init command, reload your shell or start a new terminal session.
-
-### Updating Shell Integration
-
-When upgrading `sobriquet` to a new version, you may need to update your shell integration if new subcommands have been added. The easiest way is to re-run the init command:
+Then restart your shell and you're ready to go!
 
 ```bash
-# Check what the current init script looks like
-sobriquet init zsh   # or bash/fish
-
-# Then update your shell rc file accordingly
+# Run with Ctrl+S or just type:
+sq
 ```
 
-If you've copied the wrapper function directly into your shell config (instead of using `eval`), make sure the `case` statement includes all subcommands: `init|generate|config|stats|audit|--help|-h|--version|-V`.
+## Usage
 
-## Shell Completions
+### Interactive Search
 
-Generate shell completions for tab-completion support:
+Just run `sobriquet` (or `sq` if you set up the alias):
 
 ```bash
-# Zsh - add to your fpath
+sq
+```
+
+The full-screen search interface will open. Start typing to search, use arrow keys to navigate, and press Enter to execute.
+
+### List All Aliases
+
+```bash
+sobriquet --list
+```
+
+Or with formatting:
+
+```bash
+sobriquet --list --format json
+sobriquet --list --format json-pretty
+```
+
+### Search with a Query
+
+```bash
+sobriquet --query "git"
+```
+
+This opens the search interface with "git" pre-filled.
+
+### View Statistics
+
+```bash
+sobriquet stats
+```
+
+See your most-used aliases and usage patterns:
+
+```bash
+# Clear statistics
+sobriquet stats clear
+```
+
+### Security Audit
+
+```bash
+sobriquet audit
+```
+
+Scan for potential security issues:
+
+```bash
+# Check for secrets only
+sobriquet audit secrets
+
+# Check for duplicate commands
+sobriquet audit duplicates
+```
+
+### Generate Completions
+
+```bash
+# Zsh
 sobriquet generate complete-zsh > ~/.zsh/completions/_sobriquet
 
 # Bash
@@ -158,236 +225,77 @@ sobriquet generate complete-bash > ~/.local/share/bash-completion/completions/so
 sobriquet generate complete-fish > ~/.config/fish/completions/sobriquet.fish
 ```
 
-## Man Page
+## Configuration
 
-Generate and install the man page:
+sobriquet looks for a config file in these locations (in order of priority):
 
-```bash
-sobriquet generate man | sudo tee /usr/local/share/man/man1/sobriquet.1
-sudo mandb  # Update man database (Linux)
-```
+1. `~/.config/sobriquet/config.toml` (recommended, XDG standard)
+2. `~/.config/sobriquet.toml`
+3. `~/.sobriquet.toml`
 
-Then view it with `man sobriquet`.
+Run `sobriquet config` to see which config file is being used.
 
-## Usage
+### Example Config
 
-```
-sobriquet [OPTIONS] [COMMAND]
+```toml
+[ui]
+height = "100%"                # Full screen by default
+prompt = "Select alias > "     # Search prompt
+preview = true                 # Show rich preview
+preview_position = "right"     # Preview position: right, up, down
 
-Commands:
-  init      Initialize shell integration (add to your shell's rc file)
-  generate  Generate shell completions or man page
-  config    Show configuration file path
-  stats     Show usage statistics (use `stats clear` to reset)
-  audit     Check for embedded secrets and duplicate aliases
+[shell]
+prefer = "zsh"                 # Preferred shell
+cache_ttl = 300                # Cache validity in seconds (0 to disable)
 
-Options:
-  -l, --list             List all aliases without interactive selection
-  -s, --shell <SHELL>    Specify which shell to use [possible values: zsh, bash, fish]
-  -q, --query <QUERY>    Start with a pre-filled query
-  -f, --format <FORMAT>  Output format for --list [default: plain] [possible values: plain, json, json-pretty]
-  -r, --refresh          Force refresh of the alias cache
-  --color <WHEN>         Color mode [default: auto] [possible values: auto, always, never]
-  --print-query          Print the query if no match is selected
-  -h, --help             Print help
-  -V, --version          Print version
-```
-
-### Examples
-
-```bash
-# Open interactive fuzzy finder
-sobriquet
-
-# Start with a pre-filled query
-sobriquet --query git
-
-# List all aliases (non-interactive)
-sobriquet --list
-
-# List aliases as JSON
-sobriquet --list --format json
-
-# Use a specific shell
-sobriquet --shell bash
-
-# Force refresh the alias cache
-sobriquet --refresh
-
-# View usage statistics
-sobriquet stats
-
-# Clear usage statistics
-sobriquet stats clear
-
-# Show config file path
-sobriquet config
-
-# Audit for secrets and duplicates
-sobriquet audit
-
-# Audit for secrets only
-sobriquet audit secrets
-
-# Audit for duplicates only
-sobriquet audit duplicates
-
-# Pipe to other commands
-sobriquet --list | grep git
-
-# Generate shell init script
-sobriquet init zsh
-
-# Generate completions
-sobriquet generate complete-zsh > _sobriquet
-
-# Generate man page
-sobriquet generate man > sobriquet.1
+[output]
+color = "auto"                 # Color mode: auto, always, never
 ```
 
 ## How It Works
 
-1. `sobriquet` runs your shell in interactive mode to get all defined aliases
-2. It parses the output and presents them in a fuzzy finder
-3. When you select an alias, it outputs the **expanded command** (not the alias name)
-4. The shell wrapper function captures this output and places it on your command line
+1. **Collection** - sobriquet runs your shell in interactive mode to collect all defined aliases
+2. **Caching** - Aliases are cached for instant startup (~3ms vs ~2s without cache)
+3. **Search** - When you run `sobriquet`, it launches a full-screen fuzzy finder using [skim](https://github.com/lotabout/skim)
+4. **Preview** - As you search, sobriquet shows a rich preview with command breakdown, warnings, and source location
+5. **Execute** - Select an alias and the expanded command is placed on your command line, ready to execute or edit
 
-This approach ensures you see exactly what command will run before executing it, which is especially useful for complex aliases with arguments or environment variables.
+The key difference from just typing an alias: you see the **expanded command** before execution, making it impossible to have typos frustrate you.
 
-## Caching
+## Performance
 
-To improve startup performance, `sobriquet` caches your aliases to `~/.cache/sobriquet/aliases.json`. The cache has a default TTL of 5 minutes (300 seconds).
+| Operation | Time |
+|-----------|------|
+| Cold start (no cache) | ~2s |
+| Warm start (cached) | ~3ms |
+| Search/Filter | <10ms |
+| Shell startup overhead | <5ms |
 
-- **First run**: ~2 seconds (reads aliases from shell)
-- **Cached run**: ~3 milliseconds
+sobriquet is carefully optimized to be invisible in your workflow.
 
-To force a cache refresh:
+## Supported Shells
 
-```bash
-sobriquet --refresh
-# or
-sobriquet -r
-```
+- ✅ zsh
+- ✅ bash
+- ✅ fish
 
-You can configure the cache TTL in your config file (see Configuration below). Set `cache_ttl = 0` to disable caching.
+## Security
 
-## Usage Statistics
+sobriquet can audit your aliases for:
 
-`sobriquet` tracks which aliases you use to help you understand your workflow:
+- **Embedded Secrets** - API keys, tokens, passwords, AWS credentials, etc.
+- **Duplicate Commands** - Multiple aliases pointing to the same command
+- **Dangerous Patterns** - Risky commands like `rm -rf`, `sudo rm`, etc.
 
-```bash
-# View statistics (all-time and last 7 days)
-sobriquet stats
+All analysis happens locally on your machine. Nothing is sent anywhere.
 
-# Clear all statistics
-sobriquet stats clear
-```
+## Why "sobriquet"?
 
-Statistics are stored in `~/.local/share/sobriquet/stats.json`.
-
-## Security Audit
-
-Check your aliases for potential security issues and duplicates:
-
-```bash
-# Run all checks (secrets + duplicates)
-sobriquet audit
-
-# Check for embedded secrets only
-sobriquet audit secrets
-
-# Check for duplicate commands only
-sobriquet audit duplicates
-```
-
-### What it detects
-
-**Secrets:**
-- API keys (`API_KEY=`, `APIKEY=`)
-- Tokens (`TOKEN=`, `ACCESS_TOKEN=`, `AUTH_TOKEN=`)
-- Passwords (`PASSWORD=`, `SECRET=`)
-- Cloud credentials (`AWS_SECRET_ACCESS_KEY=`, `AKIA...`)
-- Known key formats (`sk-ant-`, `ghp_`, `xoxb-`, etc.)
-
-**Duplicates:**
-- Multiple aliases pointing to the same command
-
-The audit also shows the **file location** where each problematic alias is defined, making it easy to fix issues.
-
-Example output:
-```
-sobriquet audit
-
-Scanned 150 aliases
-
-⚠ 2 alias(es) contain secrets:
-  • claude         API key          ~/.zshrc:87
-    ANTHROPIC_API_KEY=sk-ant-...
-  • aws_prod       AWS credentials  ~/.config/zsh/aws.zsh:12
-    AWS_SECRET_ACCESS_KEY=...
-
-⚠ 3 duplicate command(s) found:
-  • "git status"
-    → gs (~/.zshrc:42)
-    → gst (~/.zshrc:43)
-
-✓ 145 aliases passed all checks
-```
-
-## Keyboard Shortcuts
-
-In the interactive fuzzy finder:
-
-| Key | Action |
-|-----|--------|
-| `Enter` | Select the highlighted alias |
-| `Esc` / `Ctrl+C` | Cancel selection |
-| `Ctrl+J` / `Ctrl+N` / `Down` | Move to next item |
-| `Ctrl+K` / `Ctrl+P` / `Up` | Move to previous item |
-| `Ctrl+U` | Clear the search query |
-
-## Exit Codes
-
-| Code | Meaning |
-|------|---------|
-| `0` | Success (alias selected or list printed) |
-| `1` | No selection made (user cancelled) |
-| `2` | Error occurred |
-
-## Configuration
-
-`alx` looks for configuration in the following locations (in order of priority):
-
-1. `~/.config/sobriquet/config.toml` (recommended, XDG standard)
-2. `~/.config/alx.toml`
-3. `~/.alx.toml`
-
-Run `sobriquet config` to see which config file is being used (or where to create one).
-
-```toml
-[ui]
-height = "50%"      # Height of the fuzzy finder
-prompt = "> "       # Prompt string
-preview = true      # Show command preview
-preview_position = "right"  # Preview position: right, up, down
-
-[shell]
-prefer = "zsh"      # Preferred shell: zsh, bash, fish
-cache_ttl = 300     # Cache TTL in seconds (0 to disable)
-
-[output]
-color = "auto"      # Color mode: auto, always, never
-```
-
-## Requirements
-
-- A Unix-like shell (zsh, bash, or fish)
-- A terminal that supports ANSI escape codes
+A sobriquet is a nickname or epithet that describes someone or something. Your shell aliases are exactly that—custom nicknames for your commands. The tool helps you remember and use them effectively.
 
 ## Building from Source
 
 ```bash
-# Clone
 git clone https://github.com/benjaminch/sobriquet.git
 cd sobriquet
 
@@ -400,8 +308,8 @@ cargo test
 # Run clippy
 cargo clippy --all-targets
 
-# Run with optimizations
-cargo run --release
+# Install
+cargo install --path .
 ```
 
 ### Minimum Supported Rust Version
@@ -414,28 +322,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes using [Conventional Commits](https://www.conventionalcommits.org/) format
+3. Commit your changes using [Conventional Commits](https://www.conventionalcommits.org/)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-### Commit Message Format
-
-This project follows [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
-
-Examples:
-- `feat: add fish shell support`
-- `fix(parser): handle quoted aliases correctly`
-- `docs: update installation instructions`
 
 ### Code Quality
 
@@ -451,6 +340,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- [skim](https://github.com/lotabout/skim) - Fuzzy finder library for Rust
-- [clap](https://github.com/clap-rs/clap) - Command line argument parser
-- [ripgrep](https://github.com/BurntSushi/ripgrep) - Inspiration for project structure and CI setup
+- [Atuin](https://github.com/atuinsh/atuin) - Inspiration for the full-screen search UI
+- [skim](https://github.com/lotabout/skim) - Fuzzy finder library
+- [clap](https://github.com/clap-rs/clap) - CLI argument parsing
+- The open-source community for amazing tools and libraries
