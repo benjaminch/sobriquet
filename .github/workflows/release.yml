@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ env.VERSION }}
+      tag: ${{ env.TAG }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -155,8 +156,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          version="${{ needs.create-release.outputs.version }}"
-          gh release upload "$version" "$ASSET" "$ASSET_SUM"
+          tag="${{ needs.create-release.outputs.tag }}"
+          gh release upload "$tag" "$ASSET" "$ASSET_SUM"
 
   publish:
     name: Publish to crates.io
