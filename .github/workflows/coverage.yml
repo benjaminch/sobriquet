@@ -30,7 +30,7 @@ jobs:
         run: cargo install cargo-tarpaulin
 
       - name: Generate coverage
-        run: cargo tarpaulin --out xml --output-dir coverage --timeout 300
+        run: cargo tarpaulin --lib --bins --tests --out xml --output-dir coverage --timeout 300
 
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v3
@@ -66,7 +66,8 @@ jobs:
       - name: Check coverage thresholds
         run: |
           # Generate coverage and capture output
-          OUTPUT=$(cargo tarpaulin --out xml --output-dir coverage --timeout 300 2>&1)
+          # Include lib, bins, and tests to get comprehensive coverage
+          OUTPUT=$(cargo tarpaulin --lib --bins --tests --out xml --output-dir coverage --timeout 300 2>&1)
           
           # Extract coverage percentage from the summary line (e.g., "58.36% coverage, ...")
           # This line appears at the very end of tarpaulin output

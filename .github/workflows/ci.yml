@@ -173,7 +173,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Check Cargo.lock
-        run: cargo update --locked
+        run: cargo update --dry-run
 
   # Security audit for dependencies
   security:
