@@ -183,6 +183,7 @@ jobs:
           repository: benjaminch/homebrew-tap
           path: homebrew-tap
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: Calculate SHA256 checksums and generate formula
         env:
@@ -263,7 +264,5 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git config --local credential.helper store
-          echo "https://github-actions:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
           git add Formula/sobriquet.rb
-          git diff --cached --quiet || (git commit -m "chore: update sobriquet formula to ${{ needs.create-release.outputs.version }}" && git push)
+          git diff --cached --quiet || (git commit -m "chore: update sobriquet formula to ${{ needs.create-release.outputs.version }}" && git push origin main)
