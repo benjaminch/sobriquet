@@ -67,16 +67,23 @@ jobs:
         run: |
           # Generate coverage and capture output
           # Include lib, bins, and tests to get comprehensive coverage
-          OUTPUT=$(cargo tarpaulin --lib --bins --tests --out xml --output-dir coverage --timeout 300 2>&1)
+          cargo tarpaulin --lib --bins --tests --out xml --output-dir coverage --timeout 300 > /tmp/coverage.txt 2>&1
           
           # Extract coverage percentage from the summary line (e.g., "58.36% coverage, ...")
-          # This line appears at the very end of tarpaulin output
-          COVERAGE=$(echo "$OUTPUT" | grep "% coverage," | grep -oE '^[0-9]+\.[0-9]+' | tail -1)
+          # The line looks like: "58.36% coverage, 635/1088 lines covered, +0.00% change in coverage"
+          COVERAGE=$(cat /tmp/coverage.txt | grep "% coverage," | sed 's/.*\([0-9]\+\.[0-9]\+\)% coverage.*/\1/' | tail -1)
+          
+          # Debug: print full output if extraction failed
+          if [ -z "$COVERAGE" ]; then
+            echo "❌ Could not extract coverage percentage!"
+            echo "Full tarpaulin output:"
+            cat /tmp/coverage.txt | tail -20
+            exit 1
+          fi
           
           echo "📊 Overall coverage: ${COVERAGE}%"
           
-          # Minimum threshold is 55% (we currently have 58%)
-          # Allow up to 5% drop in new PRs compared to main
+          # Minimum threshold is 55%
           THRESHOLD=55
           
           if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
