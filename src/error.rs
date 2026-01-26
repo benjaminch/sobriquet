@@ -15,10 +15,8 @@ pub mod exit_codes {
     pub const SUCCESS: i32 = 0;
     /// General error
     pub const GENERAL_ERROR: i32 = 1;
-    /// Invalid usage or arguments
-    pub const INVALID_USAGE: i32 = 2;
-    /// No aliases found
-    pub const NO_ALIASES: i32 = 3;
+    /// No aliases found or other runtime errors (maintains backward compatibility)
+    pub const NO_ALIASES: i32 = 2;
     /// User cancelled (Ctrl+C)
     pub const USER_CANCELLED: i32 = 130;
 }
@@ -67,14 +65,9 @@ pub enum AlxError {
 impl SobriquetError for AlxError {
     fn exit_code(&self) -> i32 {
         match self {
-            Self::NoAliasesFound => exit_codes::NO_ALIASES,
             Self::UserAborted => exit_codes::USER_CANCELLED,
-            Self::ConfigRead(_) | Self::ConfigParse(_) => {
-                exit_codes::INVALID_USAGE
-            }
-            Self::ShellExecution { .. }
-            | Self::OutputWrite(_)
-            | Self::Serialization(_) => exit_codes::GENERAL_ERROR,
+            // All other errors use NO_ALIASES exit code (2) for backward compatibility
+            _ => exit_codes::NO_ALIASES,
         }
     }
 
@@ -130,7 +123,7 @@ mod tests {
         );
         assert_eq!(
             AlxError::ConfigRead("test".into()).exit_code(),
-            exit_codes::INVALID_USAGE
+            exit_codes::NO_ALIASES
         );
         assert_eq!(
             AlxError::UserAborted.exit_code(),
