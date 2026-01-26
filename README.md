@@ -7,8 +7,6 @@
 [![License](https://img.shields.io/crates/l/sobriquet.svg)](LICENSE)
 [![MSRV](https://img.shields.io/badge/MSRV-1.92-blue.svg)](https://blog.rust-lang.org/)
 
-> **your shell aliases, but better**
-
 ## The Problem
 
 I have quite a few shell aliases, especially for my daily work dealing with a lot of Kubernetes clusters and configurations. Unfortunately, I don't always remember all of them. 
