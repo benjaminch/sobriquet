@@ -1,7 +1,7 @@
 class Sobriquet < Formula
   desc "Fuzzy finder for shell aliases"
   homepage "https://github.com/benjaminch/sobriquet"
-  url "https://github.com/benjaminch/sobriquet/archive/refs/tags/v0.1.4.tar.gz"
+  url "https://github.com/benjaminch/sobriquet/archive/refs/tags/v0.2.0.tar.gz"
   sha256 "c0bb22d8c5aa536074685e3ad2d9b47bda2f40abc52d4ac278e50704fb49a9b8"
   license "MIT"
 
