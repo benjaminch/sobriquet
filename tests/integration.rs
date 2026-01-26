@@ -1,4 +1,4 @@
-//! Integration tests for the alx CLI
+//! Integration tests for the Sobriquet CLI
 //!
 //! Tests are organized by functional scope in the `cli` module:
 //! - `help` - Help flag tests

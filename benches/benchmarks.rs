@@ -101,7 +101,9 @@ fn bench_cli_invocation(c: &mut Criterion) {
 
     // Benchmark just getting help (minimal work)
     group.bench_function("help_flag", |b| {
-        b.iter(|| Command::new("./target/release/alx").arg("--help").output());
+        b.iter(|| {
+            Command::new("./target/release/sobriquet").arg("--help").output()
+        });
     });
 
     group.finish();

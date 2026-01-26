@@ -298,11 +298,11 @@ pub fn run_audit(
 
     // Header
     if use_colors {
-        writeln!(out, "{}", "alx audit".bold())?;
-        writeln!(out, "{}", "─────────".dimmed())?;
+        writeln!(out, "{}", "sobriquet audit".bold())?;
+        writeln!(out, "{}", "───────────────".dimmed())?;
     } else {
-        writeln!(out, "alx audit")?;
-        writeln!(out, "---------")?;
+        writeln!(out, "sobriquet audit")?;
+        writeln!(out, "---------------")?;
     }
     writeln!(out)?;
     writeln!(out, "Scanned {total} aliases")?;

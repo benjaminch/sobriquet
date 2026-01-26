@@ -214,9 +214,15 @@ impl CommandExt for Command {
 }
 
 /// Helper to get the sobriquet command
-pub fn alx() -> Command {
+pub fn sobriquet() -> Command {
     use assert_cmd::cargo::cargo_bin_cmd;
     cargo_bin_cmd!("sobriquet")
+}
+
+/// Legacy alias for backward compatibility
+#[deprecated(note = "Use sobriquet() instead")]
+pub fn alx() -> Command {
+    sobriquet()
 }
 
 #[cfg(test)]

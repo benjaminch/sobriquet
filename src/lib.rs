@@ -1,6 +1,6 @@
 //! Sobriquet - A fuzzy finder for shell aliases
 //!
-//! Sobriquet (formerly alx) is an interactive command-line tool that helps you find and execute
+//! Sobriquet (formerly known as alx) is an interactive command-line tool that helps you find and execute
 //! shell aliases quickly using fuzzy search.
 //!
 //! # Features
@@ -38,6 +38,6 @@ pub mod stats;
 pub use alias::Alias;
 pub use cli::run;
 pub use config::Config;
-pub use error::{AlxError, Result, SobriquetError, SobriquetResult};
+pub use error::{Result, SobriquetAppError, SobriquetError, SobriquetResult};
 pub use shell::Shell;
 pub use stats::UsageStats;

@@ -35,7 +35,7 @@ pub trait SobriquetError: std::error::Error + Send + Sync {
 }
 
 #[derive(Error, Debug)]
-pub enum AlxError {
+pub enum SobriquetAppError {
     #[error("no aliases found")]
     NoAliasesFound,
 
@@ -62,7 +62,7 @@ pub enum AlxError {
     Serialization(String),
 }
 
-impl SobriquetError for AlxError {
+impl SobriquetError for SobriquetAppError {
     fn exit_code(&self) -> i32 {
         match self {
             Self::UserAborted => exit_codes::USER_CANCELLED,
@@ -76,7 +76,7 @@ impl SobriquetError for AlxError {
     }
 }
 
-pub type Result<T> = std::result::Result<T, AlxError>;
+pub type Result<T> = std::result::Result<T, SobriquetAppError>;
 
 /// Main result type for the application
 pub type SobriquetResult<T> = std::result::Result<T, Box<dyn SobriquetError>>;
@@ -90,7 +90,10 @@ pub trait IoErrorContext<T> {
 impl<T> IoErrorContext<T> for io::Result<T> {
     fn context(self, msg: impl Into<String>) -> Result<T> {
         self.map_err(|e| {
-            AlxError::OutputWrite(io::Error::new(e.kind(), msg.into()))
+            SobriquetAppError::OutputWrite(io::Error::new(
+                e.kind(),
+                msg.into(),
+            ))
         })
     }
 }
@@ -118,29 +121,29 @@ mod tests {
     #[test]
     fn test_app_error_exit_codes() {
         assert_eq!(
-            AlxError::NoAliasesFound.exit_code(),
+            SobriquetAppError::NoAliasesFound.exit_code(),
             exit_codes::NO_ALIASES
         );
         assert_eq!(
-            AlxError::ConfigRead("test".into()).exit_code(),
+            SobriquetAppError::ConfigRead("test".into()).exit_code(),
             exit_codes::NO_ALIASES
         );
         assert_eq!(
-            AlxError::UserAborted.exit_code(),
+            SobriquetAppError::UserAborted.exit_code(),
             exit_codes::USER_CANCELLED
         );
     }
 
     #[test]
     fn test_show_usage() {
-        assert!(AlxError::ConfigRead("test".into()).show_usage());
-        assert!(AlxError::ConfigParse("test".into()).show_usage());
-        assert!(!AlxError::NoAliasesFound.show_usage());
+        assert!(SobriquetAppError::ConfigRead("test".into()).show_usage());
+        assert!(SobriquetAppError::ConfigParse("test".into()).show_usage());
+        assert!(!SobriquetAppError::NoAliasesFound.show_usage());
     }
 
     #[test]
     fn test_format_error() {
-        let err = AlxError::ConfigRead("bad config".into());
+        let err = SobriquetAppError::ConfigRead("bad config".into());
         let formatted = format_error(&err);
         assert!(formatted.contains("failed to read config"));
         assert!(formatted.contains("--help"));

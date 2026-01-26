@@ -26,7 +26,7 @@ use skim::prelude::*;
 use crate::alias::{Alias, collect_aliases};
 use crate::audit::{self, AuditKind};
 use crate::config::{ColorChoice, Config};
-use crate::error::{AlxError, Result};
+use crate::error::{Result, SobriquetAppError};
 #[cfg(feature = "interactive")]
 use crate::preview::{CommandAnalysis, find_similar};
 use crate::shell::{InitShell, Shell, generate_init_script};
@@ -43,7 +43,7 @@ const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 #[derive(Parser, Debug)]
 #[command(name = APP_NAME, version, about, long_about = None)]
 #[command(
-    after_help = "For more information, visit: https://github.com/benjaminch/alx"
+    after_help = "For more information, visit: https://github.com/benjaminch/sobriquet"
 )]
 pub struct Args {
     #[arg(short, long, help = "List all aliases")]
@@ -248,7 +248,7 @@ fn run_fuzzy_finder(
     shell: Shell,
 ) -> Result<(String, String)> {
     if aliases.is_empty() {
-        return Err(AlxError::NoAliasesFound);
+        return Err(SobriquetAppError::NoAliasesFound);
     }
 
     let preview_opt = config.ui.preview.then_some("");
@@ -318,7 +318,7 @@ fn run_fuzzy_finder(
     drop(tx);
 
     let Some(output) = Skim::run_with(&options, Some(rx)) else {
-        return Err(AlxError::UserAborted);
+        return Err(SobriquetAppError::UserAborted);
     };
 
     if output.is_abort {
@@ -327,7 +327,7 @@ fn run_fuzzy_finder(
         if print_query && !output.query.is_empty() {
             return Ok((output.query.clone(), output.query));
         }
-        return Err(AlxError::UserAborted);
+        return Err(SobriquetAppError::UserAborted);
     }
 
     // Clean up toggle file on success
@@ -343,7 +343,7 @@ fn run_fuzzy_finder(
                 None => (text.to_string(), text.into_owned()),
             }
         })
-        .ok_or(AlxError::UserAborted)
+        .ok_or(SobriquetAppError::UserAborted)
 }
 
 #[cfg(not(feature = "interactive"))]
@@ -358,7 +358,7 @@ fn run_fuzzy_finder(
     // Interactive mode is not supported on non-Unix platforms
     // Fallback to listing mode
     if aliases.is_empty() {
-        return Err(AlxError::NoAliasesFound);
+        return Err(SobriquetAppError::NoAliasesFound);
     }
 
     // Print available aliases and ask for a selection
@@ -394,13 +394,15 @@ fn output_aliases(
             }
         }
         OutputFormat::Json => {
-            let json = serde_json::to_string(aliases)
-                .map_err(|e| AlxError::Serialization(e.to_string()))?;
+            let json = serde_json::to_string(aliases).map_err(|e| {
+                SobriquetAppError::Serialization(e.to_string())
+            })?;
             writeln!(handle, "{json}")?;
         }
         OutputFormat::JsonPretty => {
-            let json = serde_json::to_string_pretty(aliases)
-                .map_err(|e| AlxError::Serialization(e.to_string()))?;
+            let json = serde_json::to_string_pretty(aliases).map_err(|e| {
+                SobriquetAppError::Serialization(e.to_string())
+            })?;
             writeln!(handle, "{json}")?;
         }
     }
@@ -685,7 +687,7 @@ pub fn run() -> Result<ExitCode> {
                 print!("{command}");
                 Ok(ExitCode::SUCCESS)
             }
-            Err(AlxError::UserAborted) => Ok(ExitCode::from(1)),
+            Err(SobriquetAppError::UserAborted) => Ok(ExitCode::from(1)),
             Err(e) => Err(e),
         }
     }

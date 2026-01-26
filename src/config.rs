@@ -113,17 +113,17 @@ impl Config {
     pub fn config_paths() -> Vec<PathBuf> {
         let mut paths = Vec::new();
 
-        // 1. ~/.config/alx/config.toml (primary, XDG standard)
+        // 1. ~/.config/sobriquet/config.toml (primary, XDG standard)
         if let Some(config_dir) = dirs::config_dir() {
             paths.push(config_dir.join("sobriquet").join("config.toml"));
         }
 
-        // 2. ~/.config/alx.toml (alternative in config dir)
+        // 2. Legacy ~/.config/alx.toml (for backward compatibility)
         if let Some(config_dir) = dirs::config_dir() {
             paths.push(config_dir.join("alx.toml"));
         }
 
-        // 3. ~/.alx.toml (home directory dotfile)
+        // 3. Legacy ~/.alx.toml (home directory dotfile, for backward compatibility)
         if let Some(home_dir) = dirs::home_dir() {
             paths.push(home_dir.join(".alx.toml"));
         }

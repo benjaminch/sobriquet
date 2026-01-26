@@ -15,7 +15,7 @@ use std::time::SystemTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::error::{AlxError, Result};
+use crate::error::{Result, SobriquetAppError};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UsageRecord {
@@ -87,7 +87,7 @@ impl UsageStats {
         }
 
         let json = serde_json::to_string_pretty(self)
-            .map_err(|e| AlxError::Serialization(e.to_string()))?;
+            .map_err(|e| SobriquetAppError::Serialization(e.to_string()))?;
         fs::write(path, json)?;
         Ok(())
     }
@@ -242,18 +242,18 @@ pub fn display_stats(stats: &UsageStats, use_colors: bool) -> Result<()> {
     let mut out = stdout.lock();
 
     if stats.total_selections == 0 {
-        writeln!(out, "No statistics yet. Use alx to start tracking.")?;
+        writeln!(out, "No statistics yet. Use sobriquet to start tracking.")?;
         return Ok(());
     }
 
     let (recent_total, _) = stats.recent_stats();
 
     if use_colors {
-        writeln!(out, "{}", "alx statistics".bold())?;
-        writeln!(out, "{}", "──────────────".dimmed())?;
+        writeln!(out, "{}", "sobriquet statistics".bold())?;
+        writeln!(out, "{}", "────────────────────".dimmed())?;
     } else {
-        writeln!(out, "alx statistics")?;
-        writeln!(out, "--------------")?;
+        writeln!(out, "sobriquet statistics")?;
+        writeln!(out, "--------------------")?;
     }
     writeln!(out)?;
 

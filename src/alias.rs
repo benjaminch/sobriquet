@@ -16,7 +16,7 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::config::Config;
-use crate::error::{AlxError, Result};
+use crate::error::{Result, SobriquetAppError};
 use crate::shell::Shell;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -199,14 +199,14 @@ pub fn collect_aliases(
         }
     }
 
-    Err(AlxError::NoAliasesFound)
+    Err(SobriquetAppError::NoAliasesFound)
 }
 
 fn try_collect_from_shell(shell: Shell) -> Result<Vec<Alias>> {
     let output = Command::new(shell.as_str())
         .args(shell.alias_args())
         .output()
-        .map_err(|e| AlxError::ShellExecution {
+        .map_err(|e| SobriquetAppError::ShellExecution {
             shell: shell.as_str().to_owned(),
             source: e,
         })?;

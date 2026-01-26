@@ -13,6 +13,12 @@ mod version;
 
 use assert_cmd::{Command, cargo::cargo_bin_cmd};
 
-pub fn alx() -> Command {
+pub fn sobriquet() -> Command {
     cargo_bin_cmd!("sobriquet")
+}
+
+/// Legacy alias for backward compatibility
+#[allow(dead_code)]
+pub fn alx() -> Command {
+    sobriquet()
 }
