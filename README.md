@@ -379,6 +379,8 @@ If you need to bypass the hooks temporarily (not recommended), use:
 git commit --no-verify
 ```
 
+For detailed development instructions, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
 ### Code Quality
 
 Please make sure to:
@@ -386,6 +388,8 @@ Please make sure to:
 - Run `cargo clippy --all-targets` and fix any warnings (automated by pre-commit hook)
 - Add tests for new functionality
 - Update documentation if needed
+
+For coding standards and best practices, see [CODING_PRACTICES.md](CODING_PRACTICES.md).
 
 ## License
 
