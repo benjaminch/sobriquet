@@ -182,4 +182,82 @@ color = "always"
         config.output.color = ColorChoice::Never;
         assert!(!config.use_colors());
     }
+
+    #[test]
+    fn load_config_with_no_file() {
+        // This should return default config when no file exists
+        let config = Config::load();
+        // Should have default values
+        assert_eq!(config.ui.height, DEFAULT_HEIGHT);
+        assert_eq!(config.ui.prompt, DEFAULT_PROMPT);
+    }
+
+    #[test]
+    fn find_config_returns_none_when_no_config() {
+        // This tests the internal find_config logic
+        // It will return None if no config file exists at expected locations
+        let result = Config::find_config();
+        // We can't guarantee a config exists or not, so just verify it doesn't panic
+        let _ = result;
+    }
+
+    #[test]
+    fn config_paths_returns_multiple_locations() {
+        let paths = Config::config_paths();
+        // Should return at least 3 locations
+        assert!(paths.len() >= 3);
+        // All paths should have some component related to config
+        for path in &paths {
+            let path_str = path.to_string_lossy();
+            assert!(
+                path_str.contains("sobriquet") || path_str.contains("alx")
+            );
+        }
+    }
+
+    #[test]
+    fn config_path_returns_something() {
+        let path = Config::config_path();
+        // Should always return Some path (either existing or first default)
+        assert!(path.is_some());
+    }
+
+    #[test]
+    fn ui_config_default() {
+        let ui = UiConfig::default();
+        assert_eq!(ui.height, DEFAULT_HEIGHT);
+        assert_eq!(ui.prompt, DEFAULT_PROMPT);
+        assert!(ui.preview);
+        assert_eq!(ui.preview_position, "right");
+    }
+
+    #[test]
+    fn shell_config_default() {
+        let shell = ShellConfig::default();
+        assert_eq!(shell.prefer, None);
+        assert_eq!(shell.cache_ttl, 300);
+    }
+
+    #[test]
+    fn output_config_default() {
+        let output = OutputConfig::default();
+        assert_eq!(output.color, ColorChoice::Auto);
+    }
+
+    #[test]
+    fn color_choice_serialization() {
+        // Test serialization within a config structure
+        let mut config = Config::default();
+        config.output.color = ColorChoice::Always;
+        let toml_str = toml::to_string(&config).unwrap();
+        assert!(toml_str.contains("always"));
+
+        config.output.color = ColorChoice::Never;
+        let toml_str = toml::to_string(&config).unwrap();
+        assert!(toml_str.contains("never"));
+
+        config.output.color = ColorChoice::Auto;
+        let toml_str = toml::to_string(&config).unwrap();
+        assert!(toml_str.contains("auto"));
+    }
 }

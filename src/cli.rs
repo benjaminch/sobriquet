@@ -900,4 +900,156 @@ mod tests {
             Args::try_parse_from(["sobriquet", "--shell", "fish"]).unwrap();
         assert_eq!(args.shell, Some(Shell::Fish));
     }
+
+    #[test]
+    fn test_output_aliases_json() {
+        let aliases =
+            vec![Alias { name: "ls".to_owned(), command: "eza".to_owned() }];
+        let result = output_aliases(&aliases, OutputFormat::Json, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_output_aliases_json_pretty() {
+        let aliases = vec![Alias {
+            name: "ll".to_owned(),
+            command: "eza -la".to_owned(),
+        }];
+        let result = output_aliases(&aliases, OutputFormat::JsonPretty, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_output_aliases_plain_with_colors() {
+        let aliases = vec![Alias {
+            name: "gs".to_owned(),
+            command: "git status".to_owned(),
+        }];
+        let result = output_aliases(&aliases, OutputFormat::Plain, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_output_aliases_plain_no_colors() {
+        let aliases = vec![Alias {
+            name: "gc".to_owned(),
+            command: "git commit".to_owned(),
+        }];
+        let result = output_aliases(&aliases, OutputFormat::Plain, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_output_aliases_empty() {
+        let aliases: Vec<Alias> = vec![];
+        let result = output_aliases(&aliases, OutputFormat::Plain, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_generate_completions_zsh() {
+        let mut cmd = Args::command();
+        generate_completions(CompletionShell::Zsh, &mut cmd);
+        // If it doesn't panic, it works
+    }
+
+    #[test]
+    fn test_generate_completions_bash() {
+        let mut cmd = Args::command();
+        generate_completions(CompletionShell::Bash, &mut cmd);
+        // If it doesn't panic, it works
+    }
+
+    #[test]
+    fn test_generate_completions_fish() {
+        let mut cmd = Args::command();
+        generate_completions(CompletionShell::Fish, &mut cmd);
+        // If it doesn't panic, it works
+    }
+
+    #[test]
+    fn test_generate_man_page_content() {
+        let man = generate_man_page();
+        assert!(man.contains("sobriquet"));
+        assert!(man.contains(".SH NAME"));
+        assert!(man.contains(".SH DESCRIPTION"));
+    }
+
+    #[test]
+    fn test_output_format_default() {
+        assert_eq!(OutputFormat::default(), OutputFormat::Plain);
+    }
+
+    #[test]
+    fn test_parse_refresh_flag() {
+        let args = Args::try_parse_from(["sobriquet", "-r"]).unwrap();
+        assert!(args.refresh);
+        let args = Args::try_parse_from(["sobriquet", "--refresh"]).unwrap();
+        assert!(args.refresh);
+    }
+
+    #[test]
+    fn test_commands_init_subcommand() {
+        let args = Args::try_parse_from(["sobriquet", "init", "zsh"]).unwrap();
+        assert!(matches!(args.command, Some(Commands::Init { .. })));
+    }
+
+    #[test]
+    fn test_commands_config_subcommand() {
+        let args = Args::try_parse_from(["sobriquet", "config"]).unwrap();
+        assert!(matches!(args.command, Some(Commands::Config)));
+    }
+
+    #[test]
+    fn test_commands_stats_subcommand() {
+        let args = Args::try_parse_from(["sobriquet", "stats"]).unwrap();
+        assert!(matches!(args.command, Some(Commands::Stats { .. })));
+    }
+
+    #[test]
+    fn test_commands_audit_subcommand() {
+        let args = Args::try_parse_from(["sobriquet", "audit"]).unwrap();
+        assert!(matches!(args.command, Some(Commands::Audit { .. })));
+    }
+
+    #[test]
+    fn test_commands_generate_subcommand() {
+        let args =
+            Args::try_parse_from(["sobriquet", "generate", "man"]).unwrap();
+        assert!(matches!(args.command, Some(Commands::Generate { .. })));
+    }
+
+    #[test]
+    fn test_stats_clear_subcommand() {
+        let args =
+            Args::try_parse_from(["sobriquet", "stats", "clear"]).unwrap();
+        if let Some(Commands::Stats { action }) = args.command {
+            assert!(matches!(action, Some(StatsAction::Clear)));
+        }
+    }
+
+    #[test]
+    fn test_audit_with_kind() {
+        let args =
+            Args::try_parse_from(["sobriquet", "audit", "secrets"]).unwrap();
+        if let Some(Commands::Audit { kind }) = args.command {
+            assert_eq!(kind, Some(AuditKind::Secrets));
+        }
+    }
+
+    #[test]
+    fn test_alias_item_new() {
+        let alias = Alias::new("test", "echo test");
+        let item = AliasItem::new(alias.clone(), None, vec![], vec![], None);
+        assert_eq!(item.alias.name, "test");
+        assert!(!item.display.is_empty());
+    }
+
+    #[test]
+    fn test_alias_item_text() {
+        let alias = Alias::new("test", "echo test");
+        let item = AliasItem::new(alias, None, vec![], vec![], None);
+        let text = item.text();
+        assert!(text.contains("test"));
+    }
 }

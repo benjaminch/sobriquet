@@ -315,4 +315,126 @@ mod tests {
         let parsed: Alias = serde_json::from_str(&json).unwrap();
         assert_eq!(alias, parsed);
     }
+
+    #[test]
+    fn format_colored_with_colors() {
+        let alias = Alias::new("ls", "eza");
+        let colored = alias.format_colored(true);
+        // Should contain the name, arrow, and command (even if ANSI codes are present)
+        assert!(colored.contains("ls"));
+        assert!(colored.contains("->"));
+        assert!(colored.contains("eza"));
+    }
+
+    #[test]
+    fn alias_cache_path() {
+        let path = AliasCache::cache_path();
+        if let Some(p) = path {
+            assert!(p.to_string_lossy().contains("sobriquet"));
+            assert!(p.to_string_lossy().contains("aliases.json"));
+        }
+    }
+
+    #[test]
+    fn alias_cache_now() {
+        let now = AliasCache::now();
+        assert!(now > 0);
+        // Should be a reasonable unix timestamp (after 2020)
+        assert!(now > 1_577_836_800);
+    }
+
+    #[test]
+    fn alias_cache_is_valid_different_shell() {
+        let cache = AliasCache {
+            aliases: vec![],
+            timestamp: AliasCache::now(),
+            shell: "zsh".to_owned(),
+        };
+        assert!(!cache.is_valid(300, "bash"));
+    }
+
+    #[test]
+    fn alias_cache_is_valid_expired() {
+        let cache = AliasCache {
+            aliases: vec![],
+            timestamp: AliasCache::now() - 400, // 400 seconds ago
+            shell: "zsh".to_owned(),
+        };
+        assert!(!cache.is_valid(300, "zsh")); // TTL is 300 seconds
+    }
+
+    #[test]
+    fn alias_cache_is_valid_fresh() {
+        let cache = AliasCache {
+            aliases: vec![],
+            timestamp: AliasCache::now(),
+            shell: "zsh".to_owned(),
+        };
+        assert!(cache.is_valid(300, "zsh"));
+    }
+
+    #[test]
+    fn alias_cache_save_and_load() {
+        let aliases =
+            vec![Alias::new("ls", "eza"), Alias::new("ll", "eza -la")];
+        let cache = AliasCache {
+            aliases: aliases.clone(),
+            timestamp: AliasCache::now(),
+            shell: "zsh".to_owned(),
+        };
+
+        // Save the cache
+        cache.save();
+
+        // Load it back
+        if let Some(loaded) = AliasCache::load() {
+            assert_eq!(loaded.aliases.len(), 2);
+            assert_eq!(loaded.shell, "zsh");
+        }
+
+        // Clean up
+        AliasCache::clear();
+    }
+
+    #[test]
+    fn clear_cache_function() {
+        let cache = AliasCache {
+            aliases: vec![Alias::new("test", "echo test")],
+            timestamp: AliasCache::now(),
+            shell: "zsh".to_owned(),
+        };
+        cache.save();
+
+        clear_cache();
+
+        // After clearing, load should return None
+        let loaded = AliasCache::load();
+        // Either None or the cache file doesn't exist anymore
+        assert!(
+            loaded.is_none()
+                || AliasCache::cache_path().map_or(true, |p| !p.exists())
+        );
+    }
+
+    #[test]
+    fn collect_aliases_with_config() {
+        use crate::config::Config;
+        let mut config = Config::default();
+        config.shell.cache_ttl = 0; // Disable cache
+
+        // This test will try to collect from the current shell
+        // It should either succeed with aliases or fail with NoAliasesFound
+        let result = collect_aliases(None, &config);
+        // We can't guarantee aliases exist, so just check it doesn't panic
+        let _ = result;
+    }
+
+    #[test]
+    fn try_collect_from_shell_zsh() {
+        use crate::shell::Shell;
+        // Try to collect from zsh if available
+        let result = try_collect_from_shell(Shell::Zsh);
+        // Should either succeed or fail gracefully
+        let _ = result;
+    }
 }

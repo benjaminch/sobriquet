@@ -574,4 +574,101 @@ mod tests {
         let dups = find_duplicates(&aliases, Shell::Zsh);
         assert!(dups.is_empty());
     }
+
+    #[test]
+    fn test_run_audit_no_issues() {
+        let aliases = vec![
+            Alias { name: "ls".to_owned(), command: "eza".to_owned() },
+            Alias { name: "ll".to_owned(), command: "eza -la".to_owned() },
+        ];
+        let result = run_audit(&aliases, Shell::Zsh, AuditKind::All, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_audit_with_secrets() {
+        let aliases = vec![Alias {
+            name: "deploy".to_owned(),
+            command: "API_KEY=sk-123 deploy.sh".to_owned(),
+        }];
+        let result = run_audit(&aliases, Shell::Zsh, AuditKind::All, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_audit_with_duplicates() {
+        let aliases = vec![
+            Alias { name: "gs".to_owned(), command: "git status".to_owned() },
+            Alias { name: "gst".to_owned(), command: "git status".to_owned() },
+        ];
+        let result = run_audit(&aliases, Shell::Bash, AuditKind::All, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_audit_secrets_only() {
+        let aliases = vec![
+            Alias {
+                name: "test".to_owned(),
+                command: "password=secret echo".to_owned(),
+            },
+            Alias { name: "gs".to_owned(), command: "git status".to_owned() },
+            Alias { name: "gst".to_owned(), command: "git status".to_owned() },
+        ];
+        let result =
+            run_audit(&aliases, Shell::Zsh, AuditKind::Secrets, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_audit_duplicates_only() {
+        let aliases = vec![
+            Alias {
+                name: "deploy".to_owned(),
+                command: "TOKEN=abc deploy".to_owned(),
+            },
+            Alias { name: "gs".to_owned(), command: "git status".to_owned() },
+            Alias { name: "gst".to_owned(), command: "git status".to_owned() },
+        ];
+        let result =
+            run_audit(&aliases, Shell::Fish, AuditKind::Duplicates, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_audit_with_colors() {
+        let aliases =
+            vec![Alias { name: "ls".to_owned(), command: "eza".to_owned() }];
+        let result = run_audit(&aliases, Shell::Zsh, AuditKind::All, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_mask_secret_short_value() {
+        let result = mask_secret("API_KEY=abc");
+        assert_eq!(result, "API_KEY=***");
+    }
+
+    #[test]
+    fn test_mask_secret_without_equals() {
+        let result = mask_secret("shortkey");
+        assert_eq!(result, "shortkey");
+    }
+
+    #[test]
+    fn test_audit_kind_default() {
+        assert_eq!(AuditKind::default(), AuditKind::All);
+    }
+
+    #[test]
+    fn test_detect_secrets_with_quotes() {
+        let secrets = detect_secrets("export KEY='sk-ant-test' && echo");
+        assert!(!secrets.is_empty());
+    }
+
+    #[test]
+    fn test_detect_secrets_multiple_patterns() {
+        let secrets = detect_secrets("API_KEY=abc TOKEN=xyz PASSWORD=test");
+        assert!(secrets.len() >= 2);
+    }
 }
