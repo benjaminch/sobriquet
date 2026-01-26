@@ -36,7 +36,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: ./coverage/cobertura.xml
-          flags: unittests
+          flags: unittests,integrationtests
           name: codecov-umbrella
           fail_ci_if_error: false
           verbose: true
