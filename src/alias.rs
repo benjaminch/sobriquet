@@ -1,3 +1,11 @@
+//! Alias parsing, caching, and management
+//!
+//! This module handles the core alias functionality including:
+//! - Parsing shell alias definitions from different shells (zsh, bash, fish)
+//! - Caching aliases with TTL-based expiration
+//! - Fuzzy searching and filtering of aliases
+//! - Formatting alias output for different display modes
+
 use std::fmt;
 use std::fs;
 use std::path::PathBuf;

@@ -1,3 +1,11 @@
+//! Shell detection and integration
+//!
+//! This module provides:
+//! - Shell type definitions (Zsh, Bash, Fish)
+//! - Shell-specific command arguments for alias listing
+//! - Shell detection and parsing
+//! - Shell initialization script generation for integration
+
 use clap::ValueEnum;
 
 #[derive(Debug, Clone, Copy, ValueEnum, PartialEq, Eq)]

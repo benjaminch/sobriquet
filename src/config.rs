@@ -1,3 +1,12 @@
+//! Configuration management for sobriquet
+//!
+//! This module handles:
+//! - Loading and parsing TOML configuration files
+//! - UI configuration (height, prompt, preview settings)
+//! - Shell configuration (preferred shell, cache TTL)
+//! - Output configuration (color choices)
+//! - Default values and configuration schema
+
 use std::fs;
 use std::io::{self, IsTerminal};
 use std::path::PathBuf;

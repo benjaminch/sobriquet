@@ -1,3 +1,11 @@
+//! Usage statistics tracking and reporting
+//!
+//! This module provides:
+//! - Tracking alias usage frequency and timing
+//! - Persisting usage statistics to disk
+//! - Displaying top aliases and usage trends
+//! - Recent usage event history
+
 use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Write};

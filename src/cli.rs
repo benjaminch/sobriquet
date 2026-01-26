@@ -1,3 +1,13 @@
+//! Command-line interface and interactive alias selection
+//!
+//! This module provides the main CLI functionality including:
+//! - Command-line argument parsing with clap
+//! - Interactive fuzzy finder interface (skim)
+//! - Alias listing and formatting (plain, JSON)
+//! - Shell completion generation
+//! - Usage statistics tracking
+//! - Security auditing integration
+
 #[cfg(feature = "interactive")]
 use std::borrow::Cow;
 use std::io::{self, Write};
