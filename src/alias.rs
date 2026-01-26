@@ -403,6 +403,9 @@ mod tests {
 
     #[test]
     fn alias_cache_save_and_load() {
+        // Clear any existing cache to ensure test isolation
+        AliasCache::clear();
+
         let aliases =
             vec![Alias::new("ls", "eza"), Alias::new("ll", "eza -la")];
         let cache = AliasCache {
@@ -426,6 +429,9 @@ mod tests {
 
     #[test]
     fn clear_cache_function() {
+        // Clear any existing cache to ensure test isolation
+        AliasCache::clear();
+
         // First save a cache
         let cache = AliasCache {
             aliases: vec![Alias::new("test", "echo test")],
