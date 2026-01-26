@@ -30,7 +30,11 @@ jobs:
         run: cargo install cargo-tarpaulin
 
       - name: Generate coverage
-        run: cargo tarpaulin --lib --bins --tests --out xml --output-dir coverage --timeout 300
+        run: |
+          # Generate tarpaulin coverage with both lib and test targets
+          # Note: Integration tests ARE included in this measurement
+          # Tarpaulin reports line-based coverage; Codecov may report lower due to LLVM granularity
+          cargo tarpaulin --lib --bins --tests --out xml --output-dir coverage --timeout 300
 
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v3

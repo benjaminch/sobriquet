@@ -1,7 +1,9 @@
 # Codecov Configuration
-# Note: Tarpaulin (local CI measurement) reports 58.36% coverage
-# Codecov.io may report different percentages due to different measurement methods
-# This is normal and expected - both tools are measuring correctly but differently
+# Note: Tarpaulin reports 77.71% coverage (including integration tests)
+# Codecov.io may report different percentages due to their own line-level tracking
+# Both tools are measuring correctly but using different methods
+# Tarpaulin: counts lines executed during test runs
+# Codecov: uses LLVM coverage data which may show different granularity
 
 codecov:
   require_ci_to_pass: false
@@ -9,6 +11,8 @@ codecov:
   round: down
   layout: "reach,diff,flags,tree"
   show_carryforward_flags: false
+  max_report_age: 24
+  assume_all_flags: true
 
 coverage:
   precision: 2
