@@ -203,32 +203,37 @@ jobs:
           SOURCE_SHA=$(shasum -a 256 /tmp/source.tar.gz | awk '{print $1}')
           
           # Generate formula without bottles (users will build from source)
-          cat > Formula/sobriquet.rb << FORMULA_EOF
-class Sobriquet < Formula
-  desc "Fuzzy finder for shell aliases"
-  homepage "https://github.com/benjaminch/sobriquet"
-  url "https://github.com/benjaminch/sobriquet/archive/refs/tags/${TAG}.tar.gz"
-  sha256 "${SOURCE_SHA}"
-  license "MIT"
-
-  depends_on "rust" => :build
-
-  def install
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
-  end
-
-  def post_install
-    puts "To set up shell integration, add this to your shell profile:"
-    puts "eval \\\"\\\$(#{bin}/sobriquet init zsh)\\\"   # for zsh"
-    puts "eval \\\"\\\$(#{bin}/sobriquet init bash)\\\"  # for bash"
-    puts "#{bin}/sobriquet init fish | source      # for fish"
-  end
-
-  test do
-    system "#{bin}/sobriquet", "--version"
-  end
-end
-FORMULA_EOF
+          cat > Formula/sobriquet.rb << 'FORMULA_EOF'
+          class Sobriquet < Formula
+            desc "Fuzzy finder for shell aliases"
+            homepage "https://github.com/benjaminch/sobriquet"
+            url "https://github.com/benjaminch/sobriquet/archive/refs/tags/$TAG.tar.gz"
+            sha256 "$SOURCE_SHA"
+            license "MIT"
+          
+            depends_on "rust" => :build
+          
+            def install
+              system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+            end
+          
+            def post_install
+              puts "To set up shell integration, add this to your shell profile:"
+              puts "eval \"$(#{bin}/sobriquet init zsh)\"   # for zsh"
+              puts "eval \"$(#{bin}/sobriquet init bash)\"  # for bash"
+              puts "#{bin}/sobriquet init fish | source      # for fish"
+            end
+          
+            test do
+              system "#{bin}/sobriquet", "--version"
+            end
+          end
+          FORMULA_EOF
+          
+          # Replace placeholders with actual values
+          sed -i.bak "s|\$TAG|${TAG}|g" Formula/sobriquet.rb
+          sed -i.bak "s|\$SOURCE_SHA|${SOURCE_SHA}|g" Formula/sobriquet.rb
+          rm Formula/sobriquet.rb.bak
 
       - name: Commit and push formula update
         working-directory: homebrew-tap
