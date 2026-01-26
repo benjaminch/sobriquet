@@ -15,3 +15,4 @@
 #![allow(clippy::unwrap_used)]
 
 mod cli;
+mod common;
