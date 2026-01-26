@@ -407,17 +407,17 @@ mod tests {
         cache.save();
 
         // Verify it was saved
-        if let Some(path) = AliasCache::cache_path() {
-            if path.exists() {
-                // Now clear it
-                clear_cache();
+        if let Some(path) = AliasCache::cache_path()
+            && path.exists()
+        {
+            // Now clear it
+            clear_cache();
 
-                // After clearing, the file should not exist
-                assert!(
-                    !path.exists(),
-                    "Cache file should be deleted after clear"
-                );
-            }
+            // After clearing, the file should not exist
+            assert!(
+                !path.exists(),
+                "Cache file should be deleted after clear"
+            );
         }
     }
 

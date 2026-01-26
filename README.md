@@ -345,15 +345,34 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes using [Conventional Commits](https://www.conventionalcommits.org/)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Install git hooks: `./scripts/install-hooks.sh`
+4. Make your changes
+5. Commit your changes using [Conventional Commits](https://www.conventionalcommits.org/)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+### Development Setup
+
+After cloning the repository, install the git hooks to ensure code quality:
+
+```bash
+./scripts/install-hooks.sh
+```
+
+This installs a pre-commit hook that automatically runs:
+- `cargo fmt --check` - Ensures code is properly formatted
+- `cargo clippy` - Catches common mistakes and enforces best practices
+
+If you need to bypass the hooks temporarily (not recommended), use:
+```bash
+git commit --no-verify
+```
 
 ### Code Quality
 
 Please make sure to:
-- Run `cargo fmt` before committing
-- Run `cargo clippy --all-targets` and fix any warnings
+- Run `cargo fmt` before committing (automated by pre-commit hook)
+- Run `cargo clippy --all-targets` and fix any warnings (automated by pre-commit hook)
 - Add tests for new functionality
 - Update documentation if needed
 
