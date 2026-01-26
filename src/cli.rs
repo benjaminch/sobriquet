@@ -376,7 +376,7 @@ fn run_fuzzy_finder(
         "Please use 'sobriquet --list' to see all aliases"
     )?;
 
-    Err(AlxError::NoAliasesFound)
+    Err(SobriquetAppError::NoAliasesFound)
 }
 
 fn output_aliases(
