@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preview now shows raw commands by default for security
 - Better handling of environment variables in preview
 - More comprehensive command analysis and warnings
+- Interactive fuzzy finder (skim) is now Unix-only (Linux/macOS)
+
+### Removed
+
+- Windows pre-built binaries (Windows users can still build from source)
 
 ## [0.1.0] - 2025-01-24
 
