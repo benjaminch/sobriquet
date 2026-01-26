@@ -31,9 +31,11 @@ Think of it like [Atuin](https://github.com/atuinsh/atuin) but for your aliases 
 - 🖥️ **Cross-Platform** - Works on macOS, Linux, and Windows
 - 🐚 **Multi-Shell** - Supports zsh, bash, and fish
 - 🚨 **Security Audit** - Detect embedded secrets and duplicate aliases
+- 🔒 **Safe Preview** - Commands shown without expansion by default (no accidental execution)
 - 💾 **Smart Caching** - Instant startup with automatic cache invalidation
 - 📈 **Usage Tracking** - See your most-used aliases with built-in stats
 - 👁️ **Rich Preview** - Command breakdown, warnings, source location, and more
+- 🔄 **Dynamic Toggle** - Expand variables and command substitutions on-demand with Ctrl+X
 - ⚡ **Zero Config** - Works out of the box, but customizable if you want
 - 📚 **Shell Integration** - Built-in `init` command for easy setup
 - 🔄 **Shell Completions** - Generate completions for zsh, bash, and fish
@@ -185,6 +187,13 @@ sq
 
 The full-screen search interface will open. Start typing to search, use arrow keys to navigate, and press Enter to execute.
 
+**Keybindings:**
+- `Enter` - Execute the selected alias
+- `Ctrl+X` - Toggle secret masking (show/hide sensitive values like tokens, API keys)
+- `Ctrl+C` / `Esc` - Exit without executing
+
+**Security Note:** By default, sensitive values (tokens, API keys, secrets) are automatically masked in both the list and preview. Press `Ctrl+X` to reveal the full command.
+
 ### List All Aliases
 
 ```bash
@@ -266,6 +275,10 @@ height = "100%"                # Full screen by default
 prompt = "Select alias > "     # Search prompt
 preview = true                 # Show rich preview
 preview_position = "right"     # Preview position: right, up, down
+preview_expand_details = false # Expand variables and show command details (default: false)
+                               # When false: Shows raw commands (secure, no expansion)
+                               # When true: Expands $HOME, $(commands), etc.
+                               # Tip: Toggle on-the-fly with Ctrl+X
 
 [shell]
 prefer = "zsh"                 # Preferred shell

@@ -56,6 +56,7 @@ const SECRET_PREFIXES: &[(&str, &str)] = &[
     ("AWS Key ID", "AKIA"),
     ("Sendgrid", "SG."),
     ("Twilio", "SK"),
+    ("Vault token", "hvs."),
 ];
 
 /// A detected secret in an alias
@@ -149,19 +150,72 @@ pub fn get_secret_types(command: &str) -> Vec<&'static str> {
 
 /// Mask a secret value, showing only first few chars
 fn mask_secret(s: &str) -> String {
-    if let Some((key, value)) = s.split_once('=') {
-        let masked_value = if value.len() > 8 {
-            format!("{}...", &value[..8.min(value.len())])
-        } else {
-            "***".to_owned()
-        };
-        format!("{key}={masked_value}")
-    } else if s.len() > 12 {
-        // For prefix-based keys, show prefix + few chars
-        format!("{}...", &s[..12.min(s.len())])
+    if let Some((key, _value)) = s.split_once('=') {
+        // Always mask with *** for key=value patterns
+        format!("{key}=***")
     } else {
-        s.to_owned()
+        // For prefix-based keys (like hvs.xxx, sk-ant-xxx), also use ***
+        "***".to_owned()
     }
+}
+
+/// Mask all secrets in a command, returning the masked version
+pub fn mask_secrets_in_command(command: &str) -> String {
+    let mut result = command.to_owned();
+
+    // Mask pattern-based secrets (like API_KEY=xxx, TOKEN=xxx)
+    // Note: patterns already include the '=' sign (e.g., "TOKEN=")
+    for (_, patterns) in SECRET_PATTERNS {
+        for pattern in *patterns {
+            let mut offset = 0;
+            while let Some(pos) = result[offset..].find(pattern) {
+                let actual_pos = offset + pos;
+                // Pattern already includes '=', so value starts right after pattern
+                let value_start = actual_pos + pattern.len();
+                let value_rest = &result[value_start..];
+
+                // Find where the value ends (space or end of string)
+                let value_end = value_rest
+                    .find(|c: char| c.is_whitespace())
+                    .unwrap_or(value_rest.len());
+
+                if value_end > 0 {
+                    // Extract the full KEY=VALUE string
+                    let full_match_end = value_start + value_end;
+                    let full_match =
+                        &result[actual_pos..full_match_end].to_owned();
+                    let masked = mask_secret(full_match);
+
+                    // Replace and move offset past this match
+                    result.replace_range(actual_pos..full_match_end, &masked);
+                    offset = actual_pos + masked.len();
+                } else {
+                    // Empty value, just move past it
+                    offset = actual_pos + pattern.len();
+                }
+            }
+        }
+    }
+
+    // Mask prefix-based secrets (like sk-ant-xxx, hvs.xxx)
+    for (_, prefix) in SECRET_PREFIXES {
+        let mut offset = 0;
+        while let Some(pos) = result[offset..].find(prefix) {
+            let actual_pos = offset + pos;
+            let end = result[actual_pos..]
+                .find(|c: char| c.is_whitespace() || c == '"' || c == '\'')
+                .map_or(result.len(), |i| actual_pos + i);
+
+            let secret = result[actual_pos..end].to_owned();
+            let masked = mask_secret(&secret);
+
+            // Replace and move offset past this match
+            result.replace_range(actual_pos..end, &masked);
+            offset = actual_pos + masked.len();
+        }
+    }
+
+    result
 }
 
 /// Find duplicate aliases (same command, different names)
@@ -430,14 +484,8 @@ mod tests {
 
     #[test]
     fn test_mask_secret() {
-        assert_eq!(
-            mask_secret("API_KEY=verylongsecretkey"),
-            "API_KEY=verylong..."
-        );
-        assert_eq!(
-            mask_secret("sk-ant-api03-abcdefghijklmnop"),
-            "sk-ant-api03..."
-        );
+        assert_eq!(mask_secret("API_KEY=verylongsecretkey"), "API_KEY=***");
+        assert_eq!(mask_secret("sk-ant-api03-abcdefghijklmnop"), "***");
     }
 
     #[test]
@@ -652,7 +700,7 @@ mod tests {
     #[test]
     fn test_mask_secret_without_equals() {
         let result = mask_secret("shortkey");
-        assert_eq!(result, "shortkey");
+        assert_eq!(result, "***");
     }
 
     #[test]
@@ -670,5 +718,37 @@ mod tests {
     fn test_detect_secrets_multiple_patterns() {
         let secrets = detect_secrets("API_KEY=abc TOKEN=xyz PASSWORD=test");
         assert!(secrets.len() >= 2);
+    }
+
+    #[test]
+    fn test_mask_secrets_in_command_vault_token() {
+        let command = "VAULT_TOKEN=hvs.CAESIExampleFakeTokenForTestingOnly12345 qovery admin k9s";
+        let masked = mask_secrets_in_command(command);
+        assert!(masked.contains("VAULT_TOKEN=***"));
+        assert!(!masked.contains("ExampleFakeTokenForTestingOnly"));
+    }
+
+    #[test]
+    fn test_mask_secrets_in_command_api_key() {
+        let command = "API_KEY=sk-12345678901234567890 curl api.example.com";
+        let masked = mask_secrets_in_command(command);
+        assert!(masked.contains("API_KEY=***"));
+        assert!(!masked.contains("sk-12345678901234567890"));
+    }
+
+    #[test]
+    fn test_mask_secrets_in_command_multiple() {
+        let command = "TOKEN=secret123456 PASSWORD=pass123456 deploy.sh";
+        let masked = mask_secrets_in_command(command);
+        assert!(masked.contains("TOKEN=***"));
+        assert!(masked.contains("PASSWORD=***"));
+    }
+
+    #[test]
+    fn test_mask_secrets_in_command_prefix_based() {
+        let command = "auth sk-ant-api03-abcdefghijklmnop && run.sh";
+        let masked = mask_secrets_in_command(command);
+        assert!(masked.contains("***"));
+        assert!(!masked.contains("sk-ant-api03-abcdefghijklmnop"));
     }
 }

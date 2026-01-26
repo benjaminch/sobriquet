@@ -119,7 +119,7 @@ enum GenerateKind {
 #[cfg(feature = "interactive")]
 struct AliasItem {
     alias: Alias,
-    display: String,
+    display_raw: String,
     stats: Option<UsageRecord>,
     all_names: Vec<String>,
     all_aliases: Vec<Alias>,
@@ -135,19 +135,55 @@ impl AliasItem {
         all_aliases: Vec<Alias>,
         source_location: Option<AliasLocation>,
     ) -> Self {
-        let display = alias.to_string();
-        Self { alias, display, stats, all_names, all_aliases, source_location }
+        let display_raw = alias.to_string();
+
+        Self {
+            alias,
+            display_raw,
+            stats,
+            all_names,
+            all_aliases,
+            source_location,
+        }
     }
 }
 
 #[cfg(feature = "interactive")]
 impl SkimItem for AliasItem {
     fn text(&self) -> Cow<'_, str> {
-        Cow::Borrowed(&self.display)
+        // Check toggle file to determine if we should show raw (unmasked) version
+        let toggle_file =
+            std::env::temp_dir().join("sobriquet_preview_expand");
+        let show_raw = toggle_file.exists();
+
+        if show_raw {
+            // Show raw command with secrets visible
+            Cow::Borrowed(&self.display_raw)
+        } else {
+            // Mask secrets by default for security
+            let command_masked =
+                audit::mask_secrets_in_command(&self.alias.command);
+            let display_masked =
+                format!("{} -> {}", self.alias.name, command_masked);
+            Cow::Owned(display_masked)
+        }
     }
 
     fn preview(&self, _context: PreviewContext) -> ItemPreview {
-        let analysis = CommandAnalysis::new(&self.alias.command);
+        // Check toggle file to determine if we should show raw (unmasked) version
+        let toggle_file =
+            std::env::temp_dir().join("sobriquet_preview_expand");
+        let show_raw = toggle_file.exists();
+
+        // Use raw command if toggle is on, otherwise masked command
+        let command_to_analyze = if show_raw {
+            Cow::Borrowed(&self.alias.command)
+        } else {
+            // Mask secrets by default for security
+            Cow::Owned(audit::mask_secrets_in_command(&self.alias.command))
+        };
+
+        let analysis = CommandAnalysis::new(&command_to_analyze);
 
         let usage_count = self.stats.as_ref().map(|r| r.count);
         let last_used = self
@@ -174,6 +210,7 @@ impl SkimItem for AliasItem {
             &self.all_aliases,
             self.source_location.as_ref(),
             &duplicates,
+            show_raw,
         );
 
         ItemPreview::AnsiText(preview)
@@ -206,6 +243,27 @@ fn run_fuzzy_finder(
 
     let preview_opt = config.ui.preview.then_some("");
 
+    // Create a temporary state file for toggling preview details
+    let toggle_file = std::env::temp_dir().join("sobriquet_preview_expand");
+
+    // Initialize with config value
+    if config.ui.preview_show_secrets {
+        let _ = std::fs::write(&toggle_file, "1");
+    } else {
+        let _ = std::fs::remove_file(&toggle_file);
+    }
+
+    // Create toggle command script for the keybinding
+    let toggle_script = format!(
+        "test -f {} && rm {} || echo 1 > {}",
+        toggle_file.display(),
+        toggle_file.display(),
+        toggle_file.display()
+    );
+
+    let bind_option =
+        format!("ctrl-x:execute-silent({toggle_script})+refresh-preview");
+
     let mut builder = SkimOptionsBuilder::default();
     builder
         .height(Some(&config.ui.height))
@@ -213,7 +271,8 @@ fn run_fuzzy_finder(
         .prompt(Some(&config.ui.prompt))
         .preview(preview_opt)
         .query(query)
-        .nosort(true); // Preserve our frecency sort order
+        .nosort(true) // Preserve our frecency sort order
+        .bind(vec![bind_option.as_str()]);
 
     let preview_window = format!("{}:wrap", config.ui.preview_position);
     if config.ui.preview {
@@ -253,11 +312,16 @@ fn run_fuzzy_finder(
     };
 
     if output.is_abort {
+        // Clean up toggle file
+        let _ = std::fs::remove_file(&toggle_file);
         if print_query && !output.query.is_empty() {
             return Ok((output.query.clone(), output.query));
         }
         return Err(AlxError::UserAborted);
     }
+
+    // Clean up toggle file on success
+    let _ = std::fs::remove_file(&toggle_file);
 
     output
         .selected_items
@@ -1050,7 +1114,7 @@ mod tests {
         let alias = Alias::new("test", "echo test");
         let item = AliasItem::new(alias.clone(), None, vec![], vec![], None);
         assert_eq!(item.alias.name, "test");
-        assert!(!item.display.is_empty());
+        assert!(!item.display_raw.is_empty());
     }
 
     #[test]

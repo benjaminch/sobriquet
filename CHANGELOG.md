@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Safe preview mode: commands shown without expansion by default
+- Dynamic toggle with Ctrl+X to expand variables and command substitutions on-demand
+- Preview expansion configuration option (`preview_expand_details`)
+- Automatic secret masking in preview (tokens, API keys, passwords)
+- Enhanced security with secret detection in audit command
+- Improved command breakdown with expandable details
+
+### Changed
+
+- Preview now shows raw commands by default for security
+- Better handling of environment variables in preview
+- More comprehensive command analysis and warnings
+
 ## [0.1.0] - 2025-01-24
 
 ### Added

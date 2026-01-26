@@ -184,6 +184,7 @@ impl<'a> CommandAnalysis<'a> {
         _all_aliases: &[Alias],
         source_location: Option<&AliasLocation>,
         duplicates: &[&str],
+        expand_details: bool,
     ) -> String {
         let mut preview = String::with_capacity(512);
 
@@ -236,93 +237,104 @@ impl<'a> CommandAnalysis<'a> {
             let _ = writeln!(preview);
         }
 
-        // Details section
-        let breakdown = self.breakdown();
-        let _ = writeln!(preview, "  {}", "Details".bright_black());
+        // Details section (only if expand_details is true)
+        if expand_details {
+            let breakdown = self.breakdown();
+            let _ = writeln!(preview, "  {}", "Details".bright_black());
 
-        // Binary + subcommand
-        if let Some(bin) = breakdown.binary {
-            let _ = write!(
-                preview,
-                "  {} {}",
-                "Binary:".bright_black(),
-                bin.green()
-            );
-            if let Some(sub) = breakdown.subcommand {
-                let _ = write!(preview, " {}", sub.green());
+            // Binary + subcommand
+            if let Some(bin) = breakdown.binary {
+                let _ = write!(
+                    preview,
+                    "  {} {}",
+                    "Binary:".bright_black(),
+                    bin.green()
+                );
+                if let Some(sub) = breakdown.subcommand {
+                    let _ = write!(preview, " {}", sub.green());
+                }
+                let _ = writeln!(preview);
             }
+
+            // Flags
+            if !breakdown.flags.is_empty() {
+                let _ = writeln!(
+                    preview,
+                    "  {} {}",
+                    "Flags: ".bright_black(),
+                    breakdown.flags.join(" ").yellow()
+                );
+            }
+
+            // Args
+            if !breakdown.args.is_empty() {
+                let _ = writeln!(
+                    preview,
+                    "  {} {}",
+                    "Args:  ".bright_black(),
+                    breakdown.args.join(" ")
+                );
+            }
+
+            // Env vars
+            if !breakdown.env_vars.is_empty() {
+                let _ = writeln!(
+                    preview,
+                    "  {} {}",
+                    "Env:   ".bright_black(),
+                    breakdown.env_vars.join(" ").blue()
+                );
+            }
+
+            // Pipes/redirects
+            let pipes = self.pipe_count();
+            let redirects = self.redirect_count();
+            if pipes > 0 || redirects > 0 {
+                let mut flow_parts = Vec::new();
+                if pipes > 0 {
+                    flow_parts.push(format!(
+                        "{} pipe{}",
+                        pipes,
+                        if pipes == 1 { "" } else { "s" }
+                    ));
+                }
+                if redirects > 0 {
+                    flow_parts.push(format!(
+                        "{} redirect{}",
+                        redirects,
+                        if redirects == 1 { "" } else { "s" }
+                    ));
+                }
+                let _ = writeln!(
+                    preview,
+                    "  {} {}",
+                    "Flow:  ".bright_black(),
+                    flow_parts.join(", ")
+                );
+            }
+
+            // Shell compatibility
+            let hints = self.shell_hints();
+            if !hints.is_empty() {
+                let _ = writeln!(
+                    preview,
+                    "  {} {}",
+                    "Shell: ".bright_black(),
+                    hints.join(", ").bright_black()
+                );
+            }
+
             let _ = writeln!(preview);
-        }
-
-        // Flags
-        if !breakdown.flags.is_empty() {
+        } else {
+            // Show hint when details are not expanded
             let _ = writeln!(
                 preview,
-                "  {} {}",
-                "Flags: ".bright_black(),
-                breakdown.flags.join(" ").yellow()
+                "  {}",
+                "Press Ctrl+X to show full command (secrets visible)"
+                    .bright_black()
             );
-        }
-
-        // Args
-        if !breakdown.args.is_empty() {
-            let _ = writeln!(
-                preview,
-                "  {} {}",
-                "Args:  ".bright_black(),
-                breakdown.args.join(" ")
-            );
-        }
-
-        // Env vars
-        if !breakdown.env_vars.is_empty() {
-            let _ = writeln!(
-                preview,
-                "  {} {}",
-                "Env:   ".bright_black(),
-                breakdown.env_vars.join(" ").blue()
-            );
-        }
-
-        // Pipes/redirects
-        let pipes = self.pipe_count();
-        let redirects = self.redirect_count();
-        if pipes > 0 || redirects > 0 {
-            let mut flow_parts = Vec::new();
-            if pipes > 0 {
-                flow_parts.push(format!(
-                    "{} pipe{}",
-                    pipes,
-                    if pipes == 1 { "" } else { "s" }
-                ));
-            }
-            if redirects > 0 {
-                flow_parts.push(format!(
-                    "{} redirect{}",
-                    redirects,
-                    if redirects == 1 { "" } else { "s" }
-                ));
-            }
-            let _ = writeln!(
-                preview,
-                "  {} {}",
-                "Flow:  ".bright_black(),
-                flow_parts.join(", ")
-            );
-        }
-
-        // Shell compatibility
-        let hints = self.shell_hints();
-        if !hints.is_empty() {
-            let _ = writeln!(
-                preview,
-                "  {} {}",
-                "Shell: ".bright_black(),
-                hints.join(", ").bright_black()
-            );
-        }
-
-        let _ = writeln!(preview);
+            let _ = writeln!(preview);
+        } // end of expand_details block
 
         // Info section
         let _ = writeln!(preview, "  {}", "Info".bright_black());
@@ -359,14 +371,18 @@ impl<'a> CommandAnalysis<'a> {
                 writeln!(preview, "  {} {}", "Last:  ".bright_black(), last);
         }
 
-        // Similar aliases
+        // Similar aliases (by name)
         if !similar.is_empty() {
-            let _ = writeln!(
-                preview,
-                "  {} {}",
-                "Similar:".bright_black(),
-                similar.join(", ").cyan()
-            );
+            let _ =
+                writeln!(preview, "  {}", "Similar (by name):".bright_black());
+            for name in similar {
+                let _ = writeln!(
+                    preview,
+                    "    {} {}",
+                    "•".bright_black(),
+                    name.cyan()
+                );
+            }
         }
 
         preview
@@ -391,15 +407,30 @@ pub fn find_similar<'a>(
         .iter()
         .filter(|&&n| n != name)
         .filter(|&&n| {
-            // Same prefix (at least 2 chars)
-            let prefix_match = name.len() >= 2
-                && n.len() >= 2
-                && name[..2.min(name.len())] == n[..2.min(n.len())];
+            let min_len = name.len().min(n.len());
+            let max_len = name.len().max(n.len());
 
-            // Contains as substring
-            let contains = n.contains(name) || name.contains(n);
+            // Avoid matching very short names against long names
+            // e.g., "l" should not match "qovery_k9s_aws_tools_prod"
+            if min_len <= 2 && max_len > 6 {
+                return false;
+            }
 
-            // Edit distance would be nice but keeping it simple
+            // For short names (both <= 4 chars), require at least 2 char prefix
+            // For longer names, require at least 3 char prefix
+            let required_prefix =
+                if name.len() <= 4 && n.len() <= 4 { 2 } else { 3 };
+            let prefix_len = required_prefix.min(name.len()).min(n.len());
+
+            let prefix_match = prefix_len >= required_prefix
+                && name.chars().take(prefix_len).collect::<String>()
+                    == n.chars().take(prefix_len).collect::<String>();
+
+            // For substring matching, require longer substrings
+            // Only match if one contains the other AND the shorter one is at least 4 chars
+            let contains =
+                (min_len >= 4) && (n.contains(name) || name.contains(n));
+
             prefix_match || contains
         })
         .take(max)
@@ -456,10 +487,48 @@ mod tests {
 
     #[test]
     fn test_similar() {
+        // Test with short aliases that share 2+ char prefix
         let names = vec!["gs", "gst", "gss", "ga", "gc", "gco"];
         let similar = find_similar("gs", &names, 3);
+        // Should match gst, gss, gco, etc (all short and start with 'g')
         assert!(similar.contains(&"gst"));
         assert!(similar.contains(&"gss"));
+    }
+
+    #[test]
+    fn test_similar_short_aliases() {
+        // Test with aliases that share prefix
+        let names = vec!["gst", "gss", "gco", "gca", "abc"];
+        let similar = find_similar("gst", &names, 3);
+        // Should match gss, gco, gca (all start with 'g')
+        assert!(similar.contains(&"gss"));
+    }
+
+    #[test]
+    fn test_similar_no_short_matches() {
+        // Long alias names should not match very short ones
+        let names = vec!["_", "l", "ls", "qovery_k9s", "qovery_prod"];
+        let similar = find_similar("qovery_k9s_aws_tools_prod", &names, 5);
+
+        // Should NOT match single chars or very short names
+        assert!(!similar.contains(&"_"));
+        assert!(!similar.contains(&"l"));
+        assert!(!similar.contains(&"ls"));
+
+        // Should match similar qovery aliases
+        assert!(similar.contains(&"qovery_k9s"));
+        assert!(similar.contains(&"qovery_prod"));
+    }
+
+    #[test]
+    fn test_similar_prefix_match() {
+        let names = vec!["kubectl", "kubectx", "kubens", "kube_config"];
+        let similar = find_similar("kube", &names, 3);
+
+        // All should match on prefix
+        assert!(similar.contains(&"kubectl"));
+        assert!(similar.contains(&"kubectx"));
+        assert!(similar.contains(&"kubens"));
     }
 
     #[test]
@@ -711,8 +780,16 @@ mod tests {
         let analysis = CommandAnalysis::new(
             "curl https://api.example.com -H Authorization:token",
         );
-        let preview =
-            analysis.generate_preview("api", None, None, &[], &[], None, &[]);
+        let preview = analysis.generate_preview(
+            "api",
+            None,
+            None,
+            &[],
+            &[],
+            None,
+            &[],
+            false,
+        );
         // May contain warnings depending on secret detection
         let _ = preview;
     }
@@ -728,6 +805,7 @@ mod tests {
             &[],
             None,
             &[],
+            false,
         );
         assert!(preview.contains("ll"));
         // Usage info is displayed in the preview
@@ -746,6 +824,7 @@ mod tests {
             &[],
             None,
             &[],
+            false,
         );
         assert!(preview.contains("Warnings"));
         assert!(preview.contains("Recursive force delete"));
@@ -763,6 +842,7 @@ mod tests {
             &[],
             None,
             &duplicates,
+            false,
         );
         assert!(preview.contains("Warnings"));
         assert!(preview.contains("Duplicates"));
@@ -782,6 +862,7 @@ mod tests {
             &[],
             None,
             &[],
+            false,
         );
         assert!(preview.contains("Similar"));
         assert!(preview.contains("gc2"));
@@ -800,6 +881,7 @@ mod tests {
             &[],
             None,
             &[],
+            true,
         );
         assert!(preview.contains("Flow"));
         assert!(preview.contains("pipe"));
@@ -817,6 +899,7 @@ mod tests {
             &[],
             None,
             &[],
+            true,
         );
         assert!(preview.contains("Flags"));
         assert!(preview.contains("Args"));

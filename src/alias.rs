@@ -124,6 +124,26 @@ impl Alias {
             format!("{} -> {}", self.name, self.command)
         }
     }
+
+    /// Expand the command by executing it in a shell to resolve variables and command substitutions
+    /// Returns the expanded command, or the original if expansion fails
+    pub fn expand_command(&self, shell: Shell) -> String {
+        // Use shell to expand the command without executing it
+        // We use 'echo' to safely expand variables and command substitutions
+        let expand_cmd = format!("echo {}", self.command);
+
+        let output = std::process::Command::new(shell.as_str())
+            .arg("-c")
+            .arg(&expand_cmd)
+            .output();
+
+        match output {
+            Ok(out) if out.status.success() => {
+                String::from_utf8_lossy(&out.stdout).trim().to_owned()
+            }
+            _ => self.command.clone(), // Fallback to original on error
+        }
+    }
 }
 
 impl fmt::Display for Alias {

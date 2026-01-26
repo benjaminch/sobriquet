@@ -23,6 +23,8 @@ pub struct UiConfig {
     pub prompt: String,
     pub preview: bool,
     pub preview_position: String,
+    #[serde(alias = "preview_expand_details")]
+    pub preview_show_secrets: bool,
 }
 
 impl Default for UiConfig {
@@ -32,6 +34,7 @@ impl Default for UiConfig {
             prompt: DEFAULT_PROMPT.to_owned(),
             preview: true,
             preview_position: "right".to_owned(),
+            preview_show_secrets: false,
         }
     }
 }
@@ -229,6 +232,7 @@ color = "always"
         assert_eq!(ui.prompt, DEFAULT_PROMPT);
         assert!(ui.preview);
         assert_eq!(ui.preview_position, "right");
+        assert!(!ui.preview_show_secrets);
     }
 
     #[test]
