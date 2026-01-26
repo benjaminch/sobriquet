@@ -391,6 +391,24 @@ Please make sure to:
 
 For coding standards and best practices, see [CODING_PRACTICES.md](CODING_PRACTICES.md).
 
+### Releasing (Maintainers)
+
+Releasing a new version is fully automated:
+
+```bash
+# One command to create and publish a release
+make release VERSION=0.3.0
+```
+
+This will:
+- Update `Cargo.toml` and `Cargo.lock`
+- Run tests
+- Create commit and tag
+- Push to GitHub
+- Automatically trigger CI to build binaries, publish to crates.io, and update Homebrew
+
+See [docs/QUICK_RELEASE.md](docs/QUICK_RELEASE.md) for quick reference or [docs/RELEASING.md](docs/RELEASING.md) for detailed documentation.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

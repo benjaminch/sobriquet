@@ -38,10 +38,25 @@ jobs:
             exit 1
           fi
 
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git tag --sort=-version:refname | grep -A1 "$TAG" | tail -1 || echo "")
+          
+          if [ -z "$PREV_TAG" ]; then
+            echo "First release of sobriquet" > /tmp/changelog.md
+          else
+            echo "## What's Changed" > /tmp/changelog.md
+            echo "" >> /tmp/changelog.md
+            git log --pretty=format:"- %s (%h)" "$PREV_TAG..$TAG" 2>/dev/null >> /tmp/changelog.md || true
+            echo "" >> /tmp/changelog.md
+            echo "**Full Changelog**: https://github.com/benjaminch/sobriquet/compare/$PREV_TAG...$TAG" >> /tmp/changelog.md
+          fi
+
       - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create $TAG --draft --verify-tag --title $VERSION
+        run: gh release create $TAG --draft --verify-tag --title "v$VERSION" --notes-file /tmp/changelog.md
 
   build-release:
     name: Build (${{ matrix.name }})
