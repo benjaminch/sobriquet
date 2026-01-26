@@ -1,3 +1,4 @@
+#[cfg(feature = "interactive")]
 use std::borrow::Cow;
 use std::io::{self, Write};
 use std::process::ExitCode;
@@ -16,10 +17,15 @@ use crate::alias::{Alias, collect_aliases};
 use crate::audit::{self, AuditKind};
 use crate::config::{ColorChoice, Config};
 use crate::error::{AlxError, Result};
+#[cfg(feature = "interactive")]
 use crate::preview::{CommandAnalysis, find_similar};
 use crate::shell::{InitShell, Shell, generate_init_script};
+#[cfg(feature = "interactive")]
 use crate::source::AliasLocation;
+#[cfg(feature = "interactive")]
 use crate::stats::{UsageRecord, UsageStats, display_stats};
+#[cfg(not(feature = "interactive"))]
+use crate::stats::{UsageStats, display_stats};
 
 const APP_NAME: &str = "sobriquet";
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -719,6 +725,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "interactive")]
     fn test_command_analysis_with_complex_command() {
         let cmd =
             "KUBECONFIG=~/.kube/config kubectl get pods -o json | jq '.items'";
@@ -1038,6 +1045,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "interactive")]
     fn test_alias_item_new() {
         let alias = Alias::new("test", "echo test");
         let item = AliasItem::new(alias.clone(), None, vec![], vec![], None);
@@ -1046,6 +1054,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "interactive")]
     fn test_alias_item_text() {
         let alias = Alias::new("test", "echo test");
         let item = AliasItem::new(alias, None, vec![], vec![], None);
