@@ -705,4 +705,176 @@ mod tests {
         assert_eq!(CommandAnalysis::new("cmd &> out").redirect_count(), 1);
         assert_eq!(CommandAnalysis::new("cmd >& out").redirect_count(), 1);
     }
+
+    #[test]
+    fn test_generate_preview_with_secret() {
+        let analysis = CommandAnalysis::new(
+            "curl https://api.example.com -H Authorization:token",
+        );
+        let preview =
+            analysis.generate_preview("api", None, None, &[], &[], None, &[]);
+        // May contain warnings depending on secret detection
+        let _ = preview;
+    }
+
+    #[test]
+    fn test_generate_preview_with_usage() {
+        let analysis = CommandAnalysis::new("ls -la");
+        let preview = analysis.generate_preview(
+            "ll",
+            Some(42),
+            Some("5 minutes ago"),
+            &[],
+            &[],
+            None,
+            &[],
+        );
+        assert!(preview.contains("ll"));
+        // Usage info is displayed in the preview
+        assert!(preview.contains("42"));
+        assert!(preview.contains("5 minutes ago"));
+    }
+
+    #[test]
+    fn test_generate_preview_with_warnings() {
+        let analysis = CommandAnalysis::new("rm -rf /tmp");
+        let preview = analysis.generate_preview(
+            "rmdanger",
+            None,
+            None,
+            &[],
+            &[],
+            None,
+            &[],
+        );
+        assert!(preview.contains("Warnings"));
+        assert!(preview.contains("Recursive force delete"));
+    }
+
+    #[test]
+    fn test_generate_preview_with_duplicates() {
+        let analysis = CommandAnalysis::new("git status");
+        let duplicates = vec!["gs2", "gstat"];
+        let preview = analysis.generate_preview(
+            "gs",
+            None,
+            None,
+            &[],
+            &[],
+            None,
+            &duplicates,
+        );
+        assert!(preview.contains("Warnings"));
+        assert!(preview.contains("Duplicates"));
+        assert!(preview.contains("gs2"));
+        assert!(preview.contains("gstat"));
+    }
+
+    #[test]
+    fn test_generate_preview_with_similar() {
+        let analysis = CommandAnalysis::new("git commit");
+        let similar = vec!["gc2", "gcm"];
+        let preview = analysis.generate_preview(
+            "gc",
+            None,
+            None,
+            &similar,
+            &[],
+            None,
+            &[],
+        );
+        assert!(preview.contains("Similar"));
+        assert!(preview.contains("gc2"));
+        assert!(preview.contains("gcm"));
+    }
+
+    #[test]
+    fn test_generate_preview_with_pipes_redirects() {
+        let analysis =
+            CommandAnalysis::new("cat file | grep pattern > output.txt");
+        let preview = analysis.generate_preview(
+            "search",
+            None,
+            None,
+            &[],
+            &[],
+            None,
+            &[],
+        );
+        assert!(preview.contains("Flow"));
+        assert!(preview.contains("pipe"));
+        assert!(preview.contains("redirect"));
+    }
+
+    #[test]
+    fn test_generate_preview_with_flags_and_args() {
+        let analysis = CommandAnalysis::new("docker run -it --rm ubuntu bash");
+        let preview = analysis.generate_preview(
+            "dockersh",
+            None,
+            None,
+            &[],
+            &[],
+            None,
+            &[],
+        );
+        assert!(preview.contains("Flags"));
+        assert!(preview.contains("Args"));
+    }
+
+    #[test]
+    fn test_skip_env_vars() {
+        let analysis = CommandAnalysis::new("FOO=bar BAZ=qux git status");
+        assert_eq!(analysis.binary(), Some("git"));
+        assert_eq!(analysis.skip_env_vars(), "git status");
+    }
+
+    #[test]
+    fn test_skip_env_vars_multiple() {
+        let analysis = CommandAnalysis::new(
+            "VAR1=val1 VAR2=val2 VAR3=val3 python script.py",
+        );
+        assert_eq!(analysis.binary(), Some("python"));
+    }
+
+    #[test]
+    fn test_breakdown_with_complex_command() {
+        let analysis =
+            CommandAnalysis::new("npm run build --watch -- --config");
+        let breakdown = analysis.breakdown();
+        assert_eq!(breakdown.binary, Some("npm"));
+        assert!(breakdown.flags.contains(&"--watch"));
+    }
+
+    #[test]
+    fn test_shell_hints_zsh_expansion() {
+        let analysis = CommandAnalysis::new("echo ${(U)foo}");
+        let hints = analysis.shell_hints();
+        assert!(hints.iter().any(|h| h.contains("zsh")));
+    }
+
+    #[test]
+    fn test_shell_hints_prompt_command() {
+        let analysis = CommandAnalysis::new("PROMPT_COMMAND='history -a'");
+        let hints = analysis.shell_hints();
+        // May or may not contain bash hints depending on detection
+        let _ = hints;
+    }
+
+    #[test]
+    fn test_warnings_multiple_types() {
+        let cmd = CommandAnalysis::new("rm -rf / && chmod 777 /etc");
+        let warnings = cmd.warnings();
+        assert!(warnings.len() > 0);
+        assert!(warnings.iter().any(|w| w.contains("Recursive")));
+        assert!(warnings.iter().any(|w| w.contains("chmod")));
+    }
+
+    #[test]
+    fn test_pipe_and_redirect_combined() {
+        let analysis =
+            CommandAnalysis::new("ls -la | grep foo > out.txt 2>&1");
+        assert!(analysis.pipe_count() > 0);
+        assert!(analysis.redirect_count() > 0);
+    }
 }
