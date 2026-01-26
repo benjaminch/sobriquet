@@ -398,6 +398,7 @@ mod tests {
 
     #[test]
     fn clear_cache_function() {
+        // First save a cache
         let cache = AliasCache {
             aliases: vec![Alias::new("test", "echo test")],
             timestamp: AliasCache::now(),
@@ -405,15 +406,19 @@ mod tests {
         };
         cache.save();
 
-        clear_cache();
+        // Verify it was saved
+        if let Some(path) = AliasCache::cache_path() {
+            if path.exists() {
+                // Now clear it
+                clear_cache();
 
-        // After clearing, load should return None
-        let loaded = AliasCache::load();
-        // Either None or the cache file doesn't exist anymore
-        assert!(
-            loaded.is_none()
-                || AliasCache::cache_path().is_none_or(|p| !p.exists())
-        );
+                // After clearing, the file should not exist
+                assert!(
+                    !path.exists(),
+                    "Cache file should be deleted after clear"
+                );
+            }
+        }
     }
 
     #[test]
