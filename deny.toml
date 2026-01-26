@@ -6,7 +6,9 @@ db-path = "~/.cargo/advisory-db"
 db-urls = ["https://github.com/rustsec/advisory-db"]
 version = 2
 yanked = "warn"
-ignore = []
+ignore = [
+    "RUSTSEC-2024-0375",  # atty is unmaintained, but used by skim which we depend on
+]
 
 [licenses]
 version = 2
