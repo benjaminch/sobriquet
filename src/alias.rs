@@ -227,6 +227,7 @@ pub fn parse_alias_output(content: &str) -> Vec<Alias> {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
     fn parse_simple_zsh_format() {
@@ -402,6 +403,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn alias_cache_save_and_load() {
         // Clear any existing cache to ensure test isolation
         AliasCache::clear();
@@ -428,6 +430,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn clear_cache_function() {
         // Clear any existing cache to ensure test isolation
         AliasCache::clear();
