@@ -865,7 +865,7 @@ mod tests {
     fn test_warnings_multiple_types() {
         let cmd = CommandAnalysis::new("rm -rf / && chmod 777 /etc");
         let warnings = cmd.warnings();
-        assert!(warnings.len() > 0);
+        assert!(!warnings.is_empty());
         assert!(warnings.iter().any(|w| w.contains("Recursive")));
         assert!(warnings.iter().any(|w| w.contains("chmod")));
     }

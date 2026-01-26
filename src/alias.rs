@@ -412,7 +412,7 @@ mod tests {
         // Either None or the cache file doesn't exist anymore
         assert!(
             loaded.is_none()
-                || AliasCache::cache_path().map_or(true, |p| !p.exists())
+                || AliasCache::cache_path().is_none_or(|p| !p.exists())
         );
     }
 
