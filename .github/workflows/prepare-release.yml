@@ -50,6 +50,14 @@ jobs:
       - name: Update Cargo.lock
         run: cargo update --workspace
 
+      - name: Update Formula
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [ -f "Formula/sobriquet.rb" ]; then
+            sed -i "s|archive/refs/tags/v[0-9]*\.[0-9]*\.[0-9]*|archive/refs/tags/v$VERSION|g" Formula/sobriquet.rb
+            echo "Formula URL updated (SHA256 will be calculated by release workflow)"
+          fi
+
       - name: Run tests
         run: cargo test --all-features
 
@@ -94,7 +102,7 @@ jobs:
           
           # Create and push branch
           git checkout -b "$BRANCH"
-          git add Cargo.toml Cargo.lock
+          git add Cargo.toml Cargo.lock Formula/sobriquet.rb
           git commit -m "chore: release version $VERSION"
           git push origin "$BRANCH"
           

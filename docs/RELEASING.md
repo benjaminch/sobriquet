@@ -13,10 +13,11 @@ The easiest way to create a release:
 This script will:
 1. Update version in `Cargo.toml`
 2. Update `Cargo.lock`
-3. Run tests
-4. Create a commit
-5. Create a git tag
-6. Push to GitHub (optional)
+3. Update `Formula/sobriquet.rb` (URL to new version)
+4. Run tests
+5. Create a commit
+6. Create a git tag
+7. Push to GitHub (optional)
 
 Once pushed, the release workflow automatically:
 - Builds binaries for all platforms

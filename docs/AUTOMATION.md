@@ -15,6 +15,7 @@ make release VERSION=0.3.0
 1. **Local (your machine)**
    - Updates `Cargo.toml` → `version = "0.3.0"`
    - Updates `Cargo.lock`
+   - Updates `Formula/sobriquet.rb` → URL to v0.3.0
    - Runs all tests
    - Creates commit: `chore: release version 0.3.0`
    - Creates tag: `v0.3.0`

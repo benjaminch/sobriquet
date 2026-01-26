@@ -57,17 +57,24 @@ git push origin main --follow-tags
 + version = "0.3.0"
 ```
 
-### 2. Git Commit
+### 2. Formula/sobriquet.rb
+```diff
+- url "https://github.com/benjaminch/sobriquet/archive/refs/tags/v0.2.0.tar.gz"
++ url "https://github.com/benjaminch/sobriquet/archive/refs/tags/v0.3.0.tar.gz"
+```
+(SHA256 will be calculated and updated by CI in homebrew-tap)
+
+### 3. Git Commit
 ```
 chore: release version 0.3.0
 ```
 
-### 3. Git Tag
+### 4. Git Tag
 ```
 v0.3.0 (annotated tag with message "Release 0.3.0")
 ```
 
-### 4. Cargo.lock
+### 5. Cargo.lock
 All dependencies locked to new version
 
 ## Release Checklist (Done Automatically)

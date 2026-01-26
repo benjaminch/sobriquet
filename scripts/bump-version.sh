@@ -104,11 +104,24 @@ rm Cargo.toml.bak
 print_info "Updating Cargo.lock..."
 cargo update --workspace
 
+# Update local Homebrew formula if it exists
+if [ -f "Formula/sobriquet.rb" ]; then
+    print_info "Updating Formula/sobriquet.rb (version placeholder)..."
+    # We'll update the URL and version, but leave SHA256 as a placeholder
+    # The release workflow will calculate the actual SHA256 and update homebrew-tap
+    TAG="v$NEW_VERSION"
+    sed -i.bak "s|archive/refs/tags/v[0-9]*\.[0-9]*\.[0-9]*|archive/refs/tags/$TAG|g" Formula/sobriquet.rb
+    rm Formula/sobriquet.rb.bak
+    
+    # Add note that SHA256 will be updated by CI
+    print_info "Note: SHA256 will be calculated and updated by CI in homebrew-tap"
+fi
+
 # Run tests
 print_info "Running tests..."
 if ! cargo test --quiet; then
     print_error "Tests failed. Reverting changes..."
-    git checkout Cargo.toml Cargo.lock
+    git checkout Cargo.toml Cargo.lock Formula/sobriquet.rb 2>/dev/null
     exit 1
 fi
 
@@ -120,7 +133,11 @@ fi
 
 # Create commit
 print_info "Creating commit..."
-git add Cargo.toml Cargo.lock
+FILES_TO_ADD="Cargo.toml Cargo.lock"
+if [ -f "Formula/sobriquet.rb" ]; then
+    FILES_TO_ADD="$FILES_TO_ADD Formula/sobriquet.rb"
+fi
+git add $FILES_TO_ADD
 git commit -m "chore: release version $NEW_VERSION"
 
 # Create tag
