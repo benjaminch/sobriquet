@@ -1,8 +1,8 @@
 class Sobriquet < Formula
   desc "Fuzzy finder for shell aliases"
   homepage "https://github.com/benjaminch/sobriquet"
-  url "https://github.com/benjaminch/sobriquet/archive/refs/tags/v0.2.0.tar.gz"
-  sha256 "c0bb22d8c5aa536074685e3ad2d9b47bda2f40abc52d4ac278e50704fb49a9b8"
+  url "https://github.com/benjaminch/sobriquet/archive/refs/tags/v0.3.0.tar.gz"
+  sha256 "9d775a4ae963e09f5986c57e79a6a3ed6bf81ad395c7f1d3abc84e7947c611b8"
   license "MIT"
 
   depends_on "rust" => :build

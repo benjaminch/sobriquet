@@ -39,15 +39,7 @@ make release VERSION=0.3.0
    - ✅ Publishes crate
    - ✅ Users can: `cargo install sobriquet`
 
-5. **Update Homebrew Formula**
-   - ✅ Checks out `benjaminch/homebrew-tap`
-   - ✅ Downloads source tarball
-   - ✅ Calculates SHA256
-   - ✅ Updates `Formula/sobriquet.rb`
-   - ✅ Commits and pushes
-   - ✅ Users can: `brew install benjaminch/tap/sobriquet`
-
-6. **Finalize Release**
+5. **Finalize Release**
    - ✅ Makes GitHub release public (not draft)
 
 **Total time:** ~10 minutes (automated)
@@ -168,7 +160,7 @@ After a release, users can install via:
 
 ### Homebrew (macOS/Linux)
 ```bash
-brew install benjaminch/tap/sobriquet
+brew install benjaminch/sobriquet/sobriquet
 ```
 
 ### Cargo (All platforms)
@@ -215,7 +207,7 @@ gh run list --workflow=release.yml
 ### Installation Status
 ```bash
 # Check Homebrew
-brew info benjaminch/tap/sobriquet
+brew info benjaminch/sobriquet/sobriquet
 
 # Check crates.io
 cargo search sobriquet
@@ -235,13 +227,6 @@ cargo search sobriquet
    git push origin :refs/tags/v0.3.0
    make release VERSION=0.3.0
    ```
-
-### Homebrew Update Failed
-
-Check `homebrew-tap` job logs:
-- Repository exists: `benjaminch/homebrew-tap`
-- Has correct permissions
-- Formula is valid Ruby syntax
 
 ### crates.io Publish Failed
 

@@ -21,7 +21,6 @@ That's it! The script will:
 Then automatically:
 - 🤖 Build binaries (Linux x3, macOS x2)
 - 🤖 Publish to crates.io
-- 🤖 Update Homebrew formula
 - 🤖 Create GitHub release
 
 ## Usage Examples
@@ -62,7 +61,7 @@ git push origin main --follow-tags
 - url "https://github.com/benjaminch/sobriquet/archive/refs/tags/v0.2.0.tar.gz"
 + url "https://github.com/benjaminch/sobriquet/archive/refs/tags/v0.3.0.tar.gz"
 ```
-(SHA256 will be calculated and updated by CI in homebrew-tap)
+(SHA256 will be automatically updated by the script)
 
 ### 3. Git Commit
 ```
@@ -90,7 +89,6 @@ When you push the tag, GitHub Actions will:
 - [ ] Create GitHub release with changelog
 - [ ] Upload all binaries with SHA256 checksums
 - [ ] Publish to crates.io
-- [ ] Update Homebrew formula in homebrew-tap repo
 - [ ] Make release public (not draft)
 
 ## Common Commands
@@ -109,7 +107,7 @@ gh release list
 gh run list --workflow=release.yml
 
 # Test Homebrew install after release
-brew install benjaminch/tap/sobriquet
+brew install benjaminch/sobriquet/sobriquet
 
 # Test crates.io install after release
 cargo install sobriquet
@@ -192,7 +190,7 @@ make release VERSION=0.3.0
 
 # 6. Verify release
 gh release view v0.3.0
-brew install benjaminch/tap/sobriquet
+brew install benjaminch/sobriquet/sobriquet
 ```
 
 ## See Also

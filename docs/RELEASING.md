@@ -23,7 +23,6 @@ Once pushed, the release workflow automatically:
 - Builds binaries for all platforms
 - Creates GitHub release
 - Publishes to crates.io
-- Updates Homebrew formula
 
 ## Alternative: Manual Release with PR
 
@@ -61,14 +60,7 @@ The `release.yml` workflow triggers and:
 3. **Publishes to crates.io**
    - Uses `CARGO_REGISTRY_TOKEN` secret
 
-4. **Updates Homebrew Tap**
-   - Checks out `homebrew-tap` repository
-   - Downloads source tarball
-   - Calculates SHA256
-   - Updates `Formula/sobriquet.rb`
-   - Commits and pushes to `homebrew-tap`
-
-5. **Publishes Release**
+4. **Publishes Release**
    - Changes draft to published
 
 ## Required Secrets
@@ -86,14 +78,7 @@ Configure these in [Settings → Secrets and variables → Actions](https://gith
 After release, users can install via:
 
 ```bash
-# Add tap (first time only)
-brew tap benjaminch/tap
-
-# Install
-brew install sobriquet
-
-# Or directly
-brew install benjaminch/tap/sobriquet
+brew install benjaminch/sobriquet/sobriquet
 ```
 
 ## Version Scheme
@@ -114,15 +99,6 @@ Common issues:
 - Version mismatch between tag and Cargo.toml
 - Tests failing
 - Cross-compilation issues
-
-### Homebrew Update Fails
-
-The workflow needs push access to `homebrew-tap` repository.
-
-Verify:
-- Repository exists: `benjaminch/homebrew-tap`
-- `GITHUB_TOKEN` has proper permissions
-- Check logs in the `homebrew-tap` job
 
 ### crates.io Publish Fails
 
@@ -149,7 +125,7 @@ Note: You cannot re-publish the same version to crates.io. You'll need to bump t
 
 After a successful release:
 
-- [ ] Test Homebrew installation: `brew install benjaminch/tap/sobriquet`
+- [ ] Test Homebrew installation: `brew install benjaminch/sobriquet/sobriquet`
 - [ ] Test crates.io installation: `cargo install sobriquet`
 - [ ] Verify GitHub release has all binaries
 - [ ] Test binary downloads work
@@ -164,7 +140,6 @@ After a successful release:
 10:02 - Tag pushed, release workflow triggered
 10:05 - Binaries built for all platforms
 10:08 - Published to crates.io
-10:09 - Homebrew formula updated
 10:10 - GitHub release published
 10:15 - Test installations (brew, cargo)
 ```

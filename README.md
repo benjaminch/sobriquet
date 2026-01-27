@@ -66,8 +66,7 @@ Start typing to search, press Enter to select.
 ### From Homebrew
 
 ```bash
-brew tap benjaminch/tap
-brew install sobriquet
+brew install benjaminch/sobriquet/sobriquet
 ```
 
 ### From AUR (Arch Linux)
