@@ -344,7 +344,7 @@ fn run_fuzzy_finder(
         .map(|item| {
             let text = item.output();
             match text.split_once(" -> ") {
-                Some((name, cmd)) => (cmd.to_owned(), name.to_owned()),
+                Some((name, _cmd)) => (name.to_owned(), name.to_owned()),
                 None => (text.to_string(), text.into_owned()),
             }
         })
