@@ -23,6 +23,7 @@ pub struct Config {
     pub ui: UiConfig,
     pub shell: ShellConfig,
     pub output: OutputConfig,
+    pub tip: TipConfig,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -74,6 +75,12 @@ impl Default for OutputConfig {
     fn default() -> Self {
         Self { color: ColorChoice::Auto }
     }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[serde(default)]
+pub struct TipConfig {
+    pub enable: bool,
 }
 
 #[derive(
@@ -272,5 +279,21 @@ color = "always"
         config.output.color = ColorChoice::Auto;
         let toml_str = toml::to_string(&config).unwrap();
         assert!(toml_str.contains("auto"));
+    }
+
+    #[test]
+    fn tip_config_default() {
+        let tip = TipConfig::default();
+        assert!(!tip.enable);
+    }
+
+    #[test]
+    fn parse_config_with_tip() {
+        let toml = r"
+[tip]
+enable = true
+";
+        let config: Config = toml::from_str(toml).unwrap();
+        assert!(config.tip.enable);
     }
 }

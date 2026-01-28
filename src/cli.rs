@@ -23,7 +23,7 @@ use serde_json;
 #[cfg(feature = "interactive")]
 use skim::prelude::*;
 
-use crate::alias::{Alias, collect_aliases};
+use crate::alias::{Alias, collect_aliases, find_matching_aliases};
 use crate::audit::{self, AuditKind};
 use crate::config::{ColorChoice, Config};
 use crate::error::{Result, SobriquetAppError};
@@ -109,6 +109,11 @@ enum Commands {
         /// What to check: all (default), secrets, duplicates
         #[arg(value_enum)]
         kind: Option<AuditKind>,
+    },
+    /// Find aliases for a command (useful for shell integration)
+    Tip {
+        /// The command to find aliases for
+        command: String,
     },
 }
 
@@ -410,6 +415,21 @@ fn output_aliases(
     Ok(())
 }
 
+/// Format a tip message for display in the terminal
+fn format_tip(alias_name: &str, use_colors: bool) -> String {
+    if use_colors {
+        use owo_colors::OwoColorize;
+        format!(
+            "{} {} {}",
+            "💡".bold(),
+            "Alias tip:".yellow().bold(),
+            alias_name.green().bold()
+        )
+    } else {
+        format!("Alias tip: {alias_name}")
+    }
+}
+
 fn generate_completions<G: Generator>(generator: G, cmd: &mut clap::Command) {
     clap_complete::generate(generator, cmd, APP_NAME, &mut io::stdout());
 }
@@ -440,6 +460,9 @@ sobriquet - fuzzy finder for shell aliases
 .br
 .B sobriquet
 \fBaudit\fR [\fIKIND\fR]
+.br
+.B sobriquet
+\fBtip\fR \fICOMMAND\fR
 .SH DESCRIPTION
 .B sobriquet
 reads your shell aliases and presents them in an interactive fuzzy finder.
@@ -496,6 +519,11 @@ Audit aliases for security issues and duplicates.
 \fIKIND\fR can be: \fBall\fR (default), \fBsecrets\fR, \fBduplicates\fR.
 Detects embedded API keys, tokens, passwords, and finds aliases with identical commands.
 Shows file location where each alias is defined.
+.TP
+.B tip \fICOMMAND\fR
+Find aliases that match the given command.
+Useful for shell integration to remind users of existing aliases.
+Returns exit code 0 if an alias is found, 1 otherwise.
 .SH CONFIGURATION
 Configuration file: \fI~/.config/sobriquet/config.toml\fR
 .PP
@@ -512,6 +540,9 @@ cache_ttl = 300  # seconds, 0 to disable
 
 [output]
 color = "auto"
+
+[tip]
+enable = false  # Set to true to enable automatic alias tips
 .fi
 .RE
 .SH CACHING
@@ -561,6 +592,12 @@ Check for secrets and duplicates
 .TP
 .B sobriquet audit secrets
 Check for embedded secrets only
+.TP
+.B sobriquet tip "git status"
+Check if there's an alias for 'git status'
+.TP
+.B export SOBRIQUET_TIPS_ENABLE=1
+Enable automatic alias tips in your shell (after running sobriquet init)
 .SH SEE ALSO
 .BR alias (1),
 .BR fzf (1)
@@ -644,6 +681,22 @@ pub fn run() -> Result<ExitCode> {
                     kind.unwrap_or_default(),
                     config.use_colors(),
                 )?;
+                return Ok(ExitCode::SUCCESS);
+            }
+            Commands::Tip { command } => {
+                // For tip, we allow empty aliases (graceful degradation)
+                let aliases =
+                    collect_aliases(args.shell, &config).unwrap_or_default();
+                let matches = find_matching_aliases(&command, &aliases);
+
+                if matches.is_empty() {
+                    // No aliases found - exit silently with code 1
+                    return Ok(ExitCode::from(1));
+                }
+
+                // Output the first (shortest) match as a tip
+                let tip = format_tip(&matches[0], config.use_colors());
+                println!("{tip}");
                 return Ok(ExitCode::SUCCESS);
             }
         }
@@ -1100,6 +1153,30 @@ mod tests {
         let args =
             Args::try_parse_from(["sobriquet", "generate", "man"]).unwrap();
         assert!(matches!(args.command, Some(Commands::Generate { .. })));
+    }
+
+    #[test]
+    fn test_commands_tip_subcommand() {
+        let args =
+            Args::try_parse_from(["sobriquet", "tip", "git status"]).unwrap();
+        assert!(matches!(args.command, Some(Commands::Tip { .. })));
+        if let Some(Commands::Tip { command }) = args.command {
+            assert_eq!(command, "git status");
+        }
+    }
+
+    #[test]
+    fn test_format_tip_with_colors() {
+        let tip = format_tip("gs", true);
+        assert!(tip.contains("gs"));
+        assert!(tip.contains("Alias tip:"));
+        assert!(tip.contains("💡"));
+    }
+
+    #[test]
+    fn test_format_tip_without_colors() {
+        let tip = format_tip("gc", false);
+        assert_eq!(tip, "Alias tip: gc");
     }
 
     #[test]

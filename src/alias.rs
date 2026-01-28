@@ -223,6 +223,37 @@ pub fn parse_alias_output(content: &str) -> Vec<Alias> {
     content.lines().filter_map(Alias::parse).collect()
 }
 
+/// Find aliases that match a given command
+/// Returns a list of alias names that expand to the given command
+pub fn find_matching_aliases(command: &str, aliases: &[Alias]) -> Vec<String> {
+    let mut matches = Vec::new();
+
+    // Normalize the command by trimming whitespace
+    let cmd_trimmed = command.trim();
+
+    for alias in aliases {
+        let alias_cmd = alias.command.trim();
+
+        // Exact match: command exactly equals the alias command
+        if alias_cmd == cmd_trimmed {
+            matches.push(alias.name.clone());
+            continue;
+        }
+
+        // Prefix match: command starts with alias command followed by space
+        // e.g., "git status --short" matches alias "gs='git status'"
+        if let Some(rest) = cmd_trimmed.strip_prefix(alias_cmd)
+            && (rest.is_empty() || rest.starts_with(' '))
+        {
+            matches.push(alias.name.clone());
+        }
+    }
+
+    // Sort by length (prefer shorter aliases)
+    matches.sort_by_key(String::len);
+    matches
+}
+
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
@@ -478,5 +509,79 @@ mod tests {
         let result = try_collect_from_shell(Shell::Zsh);
         // Should either succeed or fail gracefully
         let _ = result;
+    }
+
+    #[test]
+    fn find_matching_aliases_exact_match() {
+        let aliases = vec![
+            Alias::new("gs", "git status"),
+            Alias::new("gc", "git commit"),
+            Alias::new("gp", "git push"),
+        ];
+        let matches = find_matching_aliases("git status", &aliases);
+        assert_eq!(matches.len(), 1);
+        assert_eq!(matches[0], "gs");
+    }
+
+    #[test]
+    fn find_matching_aliases_prefix_match() {
+        let aliases =
+            vec![Alias::new("gs", "git status"), Alias::new("k", "kubectl")];
+        let matches = find_matching_aliases("git status --short", &aliases);
+        assert_eq!(matches.len(), 1);
+        assert_eq!(matches[0], "gs");
+
+        let matches = find_matching_aliases("kubectl get pods", &aliases);
+        assert_eq!(matches.len(), 1);
+        assert_eq!(matches[0], "k");
+    }
+
+    #[test]
+    fn find_matching_aliases_no_match() {
+        let aliases = vec![
+            Alias::new("gs", "git status"),
+            Alias::new("gc", "git commit"),
+        ];
+        let matches = find_matching_aliases("ls -la", &aliases);
+        assert!(matches.is_empty());
+    }
+
+    #[test]
+    fn find_matching_aliases_multiple_matches() {
+        let aliases =
+            vec![Alias::new("g", "git"), Alias::new("gs", "git status")];
+        let matches = find_matching_aliases("git status", &aliases);
+        // Should return both, sorted by length (prefer shorter)
+        assert_eq!(matches.len(), 2);
+        assert_eq!(matches[0], "g");
+        assert_eq!(matches[1], "gs");
+    }
+
+    #[test]
+    fn find_matching_aliases_whitespace_handling() {
+        let aliases = vec![Alias::new("gs", "git status")];
+        let matches = find_matching_aliases("  git status  ", &aliases);
+        assert_eq!(matches.len(), 1);
+        assert_eq!(matches[0], "gs");
+    }
+
+    #[test]
+    fn find_matching_aliases_empty_command() {
+        let aliases = vec![Alias::new("gs", "git status")];
+        let matches = find_matching_aliases("", &aliases);
+        assert!(matches.is_empty());
+    }
+
+    #[test]
+    fn find_matching_aliases_complex_command() {
+        let aliases = vec![
+            Alias::new("k8s", "kubectl --context=prod"),
+            Alias::new("k", "kubectl"),
+        ];
+        let matches =
+            find_matching_aliases("kubectl --context=prod get pods", &aliases);
+        assert_eq!(matches.len(), 2);
+        assert_eq!(matches[0], "k"); // shorter first
+        assert_eq!(matches[1], "k8s");
     }
 }

@@ -52,6 +52,7 @@ pub enum InitShell {
     Fish,
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn generate_init_script(shell: InitShell) -> &'static str {
     match shell {
         InitShell::Zsh => {
@@ -60,7 +61,7 @@ pub fn generate_init_script(shell: InitShell) -> &'static str {
 
 sobriquet() {
   case "$1" in
-    init|generate|config|stats|audit|--help|-h|--version|-V)
+    init|generate|config|stats|audit|tip|--help|-h|--version|-V)
       command sobriquet "$@"
       return
       ;;
@@ -73,6 +74,22 @@ sobriquet() {
   fi
   return $exit_code
 }
+
+# Alias tips - show reminders when you use full commands instead of aliases
+# To enable: set SOBRIQUET_TIPS_ENABLE=1 in your shell config
+_sobriquet_preexec() {
+  if [[ "${SOBRIQUET_TIPS_ENABLE:-0}" == "1" ]]; then
+    local cmd="$1"
+    local tip
+    tip=$(command sobriquet tip "$cmd" 2>/dev/null)
+    if [[ -n "$tip" ]]; then
+      echo "$tip"
+    fi
+  fi
+}
+
+autoload -U add-zsh-hook
+add-zsh-hook preexec _sobriquet_preexec
 "#
         }
         InitShell::Bash => {
@@ -81,7 +98,7 @@ sobriquet() {
 
 sobriquet() {
   case "$1" in
-    init|generate|config|stats|audit|--help|-h|--version|-V)
+    init|generate|config|stats|audit|tip|--help|-h|--version|-V)
       command sobriquet "$@"
       return
       ;;
@@ -100,6 +117,21 @@ sobriquet() {
   fi
   return $exit_code
 }
+
+# Alias tips - show reminders when you use full commands instead of aliases
+# To enable: set SOBRIQUET_TIPS_ENABLE=1 in your shell config
+_sobriquet_preexec() {
+  if [[ "${SOBRIQUET_TIPS_ENABLE:-0}" == "1" ]]; then
+    local cmd="$BASH_COMMAND"
+    local tip
+    tip=$(command sobriquet tip "$cmd" 2>/dev/null)
+    if [[ -n "$tip" ]]; then
+      echo "$tip"
+    fi
+  fi
+}
+
+trap '_sobriquet_preexec' DEBUG
 "#
         }
         InitShell::Fish => {
@@ -108,7 +140,7 @@ sobriquet() {
 
 function sobriquet --description "Fuzzy finder for shell aliases"
   switch $argv[1]
-    case init generate config stats audit --help -h --version -V
+    case init generate config stats audit tip --help -h --version -V
       command sobriquet $argv
       return
   end
@@ -119,6 +151,17 @@ function sobriquet --description "Fuzzy finder for shell aliases"
     commandline -f repaint
   end
   return $exit_code
+end
+
+# Alias tips - show reminders when you use full commands instead of aliases
+# To enable: set -g SOBRIQUET_TIPS_ENABLE 1 in your shell config
+function _sobriquet_preexec --on-event fish_preexec
+  if test "$SOBRIQUET_TIPS_ENABLE" = "1"
+    set -l tip (command sobriquet tip "$argv" 2>/dev/null)
+    if test -n "$tip"
+      echo "$tip"
+    end
+  end
 end
 "#
         }
