@@ -37,6 +37,7 @@ Think of it like [Atuin](https://github.com/atuinsh/atuin) but for your aliases 
 - ⚡ **Zero Config** - Works out of the box, but customizable if you want
 - 📚 **Shell Integration** - Built-in `init` command for easy setup
 - 🔄 **Shell Completions** - Generate completions for zsh, bash, and fish
+- 💡 **Alias Tips** - Get reminded when you type full commands instead of using your aliases
 
 ## Quick Demo
 
@@ -241,6 +242,31 @@ sobriquet audit secrets
 sobriquet audit duplicates
 ```
 
+### Alias Tips
+
+sobriquet can remind you when you type full commands instead of using your aliases (inspired by [alias-tips](https://github.com/djui/alias-tips)):
+
+```bash
+$ git status
+💡 Alias tip: gst
+```
+
+To enable tips, set the environment variable in your shell config:
+
+```bash
+# In ~/.zshrc, ~/.bashrc, or ~/.config/fish/config.fish
+export SOBRIQUET_TIPS_ENABLE=1
+```
+
+Or configure it in your `config.toml`:
+
+```toml
+[tip]
+enable = true
+```
+
+The tips feature integrates with your shell's preexec hook to check each command you type and suggest matching aliases.
+
 ### Generate Completions
 
 ```bash
@@ -415,6 +441,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - [Atuin](https://github.com/atuinsh/atuin) - Inspiration for the full-screen search UI
+- [alias-tips](https://github.com/djui/alias-tips) - Inspiration for the alias tips feature
 - [skim](https://github.com/lotabout/skim) - Fuzzy finder library
 - [clap](https://github.com/clap-rs/clap) - CLI argument parsing
 - The open-source community for amazing tools and libraries
