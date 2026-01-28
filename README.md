@@ -9,7 +9,7 @@
 
 ## The Problem
 
-I have quite a few shell aliases, especially for my daily work dealing with a lot of Kubernetes clusters and configurations. Unfortunately, I don't always remember all of them. 
+I have quite a few shell aliases, especially for my daily work dealing with a lot of Kubernetes clusters and configurations. Unfortunately, I don't always remember all of them.
 
 I know they're there but always have a typo in them, and it's created a lot of frustration. I'd spend more time trying to recall or correct an alias than actually running the command.
 
@@ -186,6 +186,7 @@ sq
 The full-screen search interface will open. Start typing to search, use arrow keys to navigate, and press Enter to execute.
 
 **Keybindings:**
+
 - `Enter` - Execute the selected alias
 - `Ctrl+X` - Toggle secret masking (show/hide sensitive values like tokens, API keys)
 - `Ctrl+C` / `Esc` - Exit without executing
@@ -323,12 +324,12 @@ The key difference from just typing an alias: you see the **expanded command** b
 
 ## Performance
 
-| Operation | Time |
-|-----------|------|
-| Cold start (no cache) | ~2s |
-| Warm start (cached) | ~3ms |
-| Search/Filter | <10ms |
-| Shell startup overhead | <5ms |
+| Operation              | Time  |
+| ---------------------- | ----- |
+| Cold start (no cache)  | ~2s   |
+| Warm start (cached)    | ~3ms  |
+| Search/Filter          | <10ms |
+| Shell startup overhead | <5ms  |
 
 sobriquet is carefully optimized to be invisible in your workflow.
 
@@ -396,10 +397,12 @@ After cloning the repository, install the git hooks to ensure code quality:
 ```
 
 This installs a pre-commit hook that automatically runs:
+
 - `cargo fmt --check` - Ensures code is properly formatted
 - `cargo clippy` - Catches common mistakes and enforces best practices
 
 If you need to bypass the hooks temporarily (not recommended), use:
+
 ```bash
 git commit --no-verify
 ```
@@ -409,6 +412,7 @@ For detailed development instructions, see [DEVELOPMENT.md](DEVELOPMENT.md).
 ### Code Quality
 
 Please make sure to:
+
 - Run `cargo fmt` before committing (automated by pre-commit hook)
 - Run `cargo clippy --all-targets` and fix any warnings (automated by pre-commit hook)
 - Add tests for new functionality
@@ -426,13 +430,12 @@ make release VERSION=0.3.0
 ```
 
 This will:
+
 - Update `Cargo.toml` and `Cargo.lock`
 - Run tests
 - Create commit and tag
 - Push to GitHub
 - Automatically trigger CI to build binaries, publish to crates.io, and update Homebrew
-
-See [docs/QUICK_RELEASE.md](docs/QUICK_RELEASE.md) for quick reference or [docs/RELEASING.md](docs/RELEASING.md) for detailed documentation.
 
 ## License
 
