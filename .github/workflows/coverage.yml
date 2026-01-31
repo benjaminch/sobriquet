@@ -37,7 +37,7 @@ jobs:
           cargo tarpaulin --lib --bins --tests --out xml --output-dir coverage --timeout 300
 
       - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           files: ./coverage/cobertura.xml
           flags: unittests,integrationtests
