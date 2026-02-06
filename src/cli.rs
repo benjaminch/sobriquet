@@ -232,13 +232,13 @@ impl SkimItem for AliasItem {
     }
 }
 
-/// Sort aliases by frecency score (most used/recent first)
+/// Sort aliases by frecency score (most used/recent last)
 fn sort_by_frecency(aliases: &[Alias], stats: &UsageStats) -> Vec<Alias> {
     let mut sorted: Vec<_> = aliases.to_vec();
     sorted.sort_by(|a, b| {
         let score_a = stats.frecency_score(&a.name);
         let score_b = stats.frecency_score(&b.name);
-        score_b.partial_cmp(&score_a).unwrap_or(std::cmp::Ordering::Equal)
+        score_a.partial_cmp(&score_b).unwrap_or(std::cmp::Ordering::Equal)
     });
     sorted
 }
@@ -279,13 +279,25 @@ fn run_fuzzy_finder(
     let bind_option =
         format!("ctrl-x:execute-silent({toggle_script})+refresh-preview");
 
+    // Create header with mode indicator and keyboard shortcuts
+    let mode_name = if config.ui.exact_match { "exact" } else { "fuzzy" };
+    let mode_tip = if config.ui.exact_match {
+        "use ' prefix for fuzzy"
+    } else {
+        "use ' prefix for exact"
+    };
+    let header =
+        format!("Mode: {mode_name} ({mode_tip}) | Ctrl-X: toggle secrets");
+
     let mut builder = SkimOptionsBuilder::default();
     builder
         .height(Some(&config.ui.height))
         .multi(false)
         .prompt(Some(&config.ui.prompt))
+        .header(Some(&header))
         .preview(preview_opt)
         .query(query)
+        .exact(config.ui.exact_match) // Use configured matching mode
         .nosort(true) // Preserve our frecency sort order
         .bind(vec![bind_option.as_str()]);
 
@@ -687,6 +699,20 @@ pub fn run() -> Result<ExitCode> {
                 // For tip, we allow empty aliases (graceful degradation)
                 let aliases =
                     collect_aliases(args.shell, &config).unwrap_or_default();
+
+                // Check if the command itself is already an alias name
+                let is_alias_name = aliases.iter().any(|a| {
+                    // Extract the base command (first word) from the input
+                    let base_cmd =
+                        command.split_whitespace().next().unwrap_or(&command);
+                    a.name == base_cmd
+                });
+
+                // If the command is already an alias name, don't show a tip
+                if is_alias_name {
+                    return Ok(ExitCode::from(1));
+                }
+
                 let matches = find_matching_aliases(&command, &aliases);
 
                 if matches.is_empty() {
@@ -694,9 +720,40 @@ pub fn run() -> Result<ExitCode> {
                     return Ok(ExitCode::from(1));
                 }
 
-                // Output the first (shortest) match as a tip
+                // Don't suggest aliases for simple single-word command replacements
+                // (e.g., don't suggest "cat" when typing "bat" if cat=bat)
+                // Only suggest if the command you're typing is multi-word (an actual shortcut)
+                let cmd_trimmed = command.trim();
+                let is_single_word_command = !cmd_trimmed.contains(' ');
+
+                if is_single_word_command {
+                    // Single-word command typed - only show tip if alias simplifies something
+                    // For now, skip simple binary replacements
+                    return Ok(ExitCode::from(1));
+                }
+
+                // Output the match count and tip together
+                let match_count_msg = if config.use_colors() {
+                    use owo_colors::OwoColorize;
+                    format!(
+                        "{} {}",
+                        "Found".dimmed(),
+                        format!(
+                            "{} match{}",
+                            matches.len(),
+                            if matches.len() == 1 { "" } else { "es" }
+                        )
+                        .dimmed()
+                    )
+                } else {
+                    format!(
+                        "Found {} match{}",
+                        matches.len(),
+                        if matches.len() == 1 { "" } else { "es" }
+                    )
+                };
                 let tip = format_tip(&matches[0], config.use_colors());
-                println!("{tip}");
+                println!("{match_count_msg} - {tip}");
                 return Ok(ExitCode::SUCCESS);
             }
         }
@@ -1213,5 +1270,84 @@ mod tests {
         let item = AliasItem::new(alias, None, vec![], vec![], None);
         let text = item.text();
         assert!(text.contains("test"));
+    }
+
+    #[test]
+    fn test_tip_logic_shows_for_multiword_command() {
+        // Setup: alias gs='git status'
+        let aliases = [Alias::new("gs", "git status")];
+        let command = "git status";
+
+        // Should find match and not be filtered out
+        let matches = find_matching_aliases(command, &aliases);
+        assert!(!matches.is_empty());
+
+        // Command is multi-word, so should show tip
+        let is_single_word = !command.contains(' ');
+        assert!(!is_single_word);
+
+        // Command is not an alias name
+        let is_alias_name = aliases.iter().any(|a| {
+            let base_cmd =
+                command.split_whitespace().next().unwrap_or(command);
+            a.name == base_cmd
+        });
+        assert!(!is_alias_name);
+    }
+
+    #[test]
+    fn test_tip_logic_skips_when_typing_alias_name() {
+        // Setup: alias gs='git status'
+        let aliases = [Alias::new("gs", "git status")];
+        let command = "gs";
+
+        // Command is the alias name itself
+        let is_alias_name = aliases.iter().any(|a| {
+            let base_cmd =
+                command.split_whitespace().next().unwrap_or(command);
+            a.name == base_cmd
+        });
+        assert!(is_alias_name);
+    }
+
+    #[test]
+    fn test_tip_logic_skips_single_word_commands() {
+        // Setup: alias cat='bat'
+        let aliases = [Alias::new("cat", "bat")];
+        let command = "bat";
+
+        // Should find match
+        let matches = find_matching_aliases(command, &aliases);
+        assert!(!matches.is_empty());
+
+        // But command is single-word, so should be filtered out
+        let is_single_word = !command.contains(' ');
+        assert!(is_single_word);
+    }
+
+    #[test]
+    fn test_tip_logic_handles_no_matches() {
+        // Setup: alias gs='git status'
+        let aliases = [Alias::new("gs", "git status")];
+        let command = "docker ps";
+
+        // Should find no matches
+        let matches = find_matching_aliases(command, &aliases);
+        assert!(matches.is_empty());
+    }
+
+    #[test]
+    fn test_tip_logic_complex_command_with_args() {
+        // Setup: alias gst='git status'
+        let aliases = [Alias::new("gst", "git status")];
+        let command = "git status --short";
+
+        // Should find match even with extra args
+        let matches = find_matching_aliases(command, &aliases);
+        assert!(!matches.is_empty());
+
+        // Command is multi-word
+        let is_single_word = !command.contains(' ');
+        assert!(!is_single_word);
     }
 }

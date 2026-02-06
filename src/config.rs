@@ -35,6 +35,7 @@ pub struct UiConfig {
     pub preview_position: String,
     #[serde(alias = "preview_expand_details")]
     pub preview_show_secrets: bool,
+    pub exact_match: bool,
 }
 
 impl Default for UiConfig {
@@ -45,6 +46,7 @@ impl Default for UiConfig {
             preview: true,
             preview_position: "right".to_owned(),
             preview_show_secrets: false,
+            exact_match: true,
         }
     }
 }
@@ -249,6 +251,7 @@ color = "always"
         assert!(ui.preview);
         assert_eq!(ui.preview_position, "right");
         assert!(!ui.preview_show_secrets);
+        assert!(ui.exact_match);
     }
 
     #[test]
