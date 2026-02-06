@@ -1048,8 +1048,9 @@ mod tests {
         }
 
         let sorted = sort_by_frecency(&aliases, &stats);
-        assert_eq!(sorted[0].name, "a");
-        assert_eq!(sorted[1].name, "b");
+        // Most frequent (a) should be last, least frequent (b) first
+        assert_eq!(sorted[0].name, "b");
+        assert_eq!(sorted[1].name, "a");
     }
 
     #[test]
